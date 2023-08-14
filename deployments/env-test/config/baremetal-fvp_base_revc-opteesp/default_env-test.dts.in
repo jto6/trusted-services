@@ -39,6 +39,13 @@
 			pages-count = <1>;
 			attributes = <0x3>; /* read-write */
 		};
+
+		uart {
+			/* Armv8 A Foundation Platform values */
+			base-address = <0x00000000 0x1c0b0000>;
+			pages-count = <1>;
+			attributes = <0x3>; /* read-write */
+		};
 	};
 
 	boot-params {

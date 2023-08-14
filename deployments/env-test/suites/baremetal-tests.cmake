@@ -27,6 +27,9 @@ add_components(TARGET "env-test"
 		"components/service/block_storage/block_store/device"
 		"components/service/block_storage/block_store/device/semihosting"
 		"components/service/block_storage/block_store/device/semihosting/test"
+		"components/service/log/backend/uart"
+		"components/service/log/backend/uart/uart_adapter/platform"
+		"components/service/log/backend/uart/uart_adapter/test"
 )
 
 target_sources(env-test PRIVATE
