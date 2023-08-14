@@ -30,3 +30,7 @@ endif()
 if ("semihosting" IN_LIST _platform_driver_dependencies)
 	include(${TS_ROOT}/platform/drivers/tf-a/lib/semihosting/driver.cmake)
 endif()
+
+if ("uart" IN_LIST _platform_driver_dependencies)
+        include(${TS_ROOT}/platform/drivers/arm/uart/driver.cmake)
+endif()
