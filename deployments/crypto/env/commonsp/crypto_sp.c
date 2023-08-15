@@ -8,6 +8,7 @@
 #include "service/secure_storage/factory/storage_factory.h"
 #include "service/crypto/factory/crypto_provider_factory.h"
 #include "service/crypto/backend/mbedcrypto/mbedcrypto_backend.h"
+#include "service/log/factory/log_factory.h"
 #include "protocols/rpc/common/packed-c/status.h"
 #include "config/ramstore/config_ramstore.h"
 #include "config/loader/sp/sp_config_loader.h"
@@ -146,6 +147,13 @@ static bool sp_init(uint16_t *own_id)
 	if (sp_res != SP_RESULT_OK) {
 		EMSG("Failed to map RXTX buffers: %d", sp_res);
 		return false;
+	}
+
+	IMSG("Start discovering logging service");
+	if (log_factory_create()) {
+		IMSG("Logging service discovery successful");
+	} else {
+		EMSG("Logging service discovery failed, falling back to console log");
 	}
 
 	sp_res = sp_discovery_own_id_get(own_id);

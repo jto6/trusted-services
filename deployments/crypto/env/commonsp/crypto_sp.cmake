@@ -23,6 +23,8 @@ add_components(TARGET "crypto"
 		"components/rpc/common/endpoint"
 		"components/rpc/ts_rpc/common"
 		"components/rpc/ts_rpc/endpoint/sp"
+		"components/service/log/factory"
+		"components/service/log/client"
 )
 
 target_sources(crypto PRIVATE

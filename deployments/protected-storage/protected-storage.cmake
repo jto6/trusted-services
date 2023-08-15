@@ -11,8 +11,10 @@ add_components(TARGET "protected-storage"
 		components/common/tlv
 		components/service/common/include
 		components/service/common/provider
+		components/service/common/client
 		components/service/secure_storage/include
 		components/service/secure_storage/frontend/secure_storage_provider
+		components/rpc/common/caller
 		protocols/rpc/common/packed-c
 		protocols/service/secure_storage/packed-c
 )

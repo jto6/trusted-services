@@ -9,6 +9,7 @@
 #include "components/service/secure_storage/factory/storage_factory.h"
 #include "components/service/secure_storage/frontend/secure_storage_provider/secure_storage_provider.h"
 #include "components/service/secure_storage/frontend/secure_storage_provider/secure_storage_uuid.h"
+#include "components/service/log/factory/log_factory.h"
 #include "sp_api.h"
 #include "sp_discovery.h"
 #include "sp_messaging.h"
@@ -38,6 +39,13 @@ void sp_main(union ffa_boot_info *boot_info)
 	if (result != SP_RESULT_OK) {
 		EMSG("Failed to map RXTX buffers: %d", result);
 		goto fatal_error;
+	}
+
+	IMSG("Start discovering logging service");
+	if (log_factory_create()) {
+		IMSG("Logging service discovery successful");
+	} else {
+		EMSG("Logging service discovery failed, falling back to console log");
 	}
 
 	result = sp_discovery_own_id_get(&own_id);

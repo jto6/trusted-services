@@ -9,6 +9,7 @@
 #include "config/loader/sp/sp_config_loader.h"
 #include "components/rpc/mm_communicate/endpoint/sp/mm_communicate_call_ep.h"
 #include "components/service/uefi/smm_variable/frontend/mm_communicate/smm_variable_mm_service.h"
+#include "service/log/factory/log_factory.h"
 #include "platform/interface/memory_region.h"
 #include "protocols/common/mm/mm_smc.h"
 #include "ffa_api.h"
@@ -136,6 +137,13 @@ static bool sp_init(uint16_t *own_id)
 	if (sp_res != SP_RESULT_OK) {
 		EMSG("Failed to map RXTX buffers: %d", sp_res);
 		return false;
+	}
+
+	IMSG("Start discovering logging service");
+	if (log_factory_create()) {
+		IMSG("Logging service discovery successful");
+	} else {
+		EMSG("Logging service discovery failed, falling back to console log");
 	}
 
 	sp_res = sp_discovery_own_id_get(own_id);

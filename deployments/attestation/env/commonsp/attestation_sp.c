@@ -20,6 +20,7 @@
 #include "service/attestation/claims/sources/implementation_id/implementation_id_claim_source.h"
 #include "service/attestation/key_mngr/local/local_attest_key_mngr.h"
 #include "service/crypto/client/psa/psa_crypto_client.h"
+#include "service/log/factory/log_factory.h"
 #include "service_locator.h"
 #include "psa/crypto.h"
 #include "sp_api.h"
@@ -188,6 +189,13 @@ static bool sp_init(uint16_t *own_id)
 	if (sp_res != SP_RESULT_OK) {
 		EMSG("Failed to map RXTX buffers: %d", sp_res);
 		return false;
+	}
+
+	IMSG("Start discovering logging service");
+	if (log_factory_create()) {
+		IMSG("Logging service discovery successful");
+	} else {
+		EMSG("Logging service discovery failed, falling back to console log");
 	}
 
 	sp_res = sp_discovery_own_id_get(own_id);

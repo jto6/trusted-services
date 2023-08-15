@@ -24,6 +24,8 @@ add_components(TARGET "attestation"
 		"components/rpc/common/endpoint"
 		"components/rpc/ts_rpc/common"
 		"components/rpc/ts_rpc/endpoint/sp"
+		"components/service/log/factory"
+		"components/service/log/client"
 )
 
 target_sources(attestation PRIVATE
