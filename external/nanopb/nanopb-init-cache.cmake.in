@@ -12,11 +12,18 @@ set(BUILD_STATIC_LIBS On CACHE BOOL "")
 set(nanopb_BUILD_RUNTIME On CACHE BOOL "")
 set(nanopb_BUILD_GENERATOR On CACHE BOOL "")
 set(nanopb_MSVC_STATIC_RUNTIME Off BOOL "")
-set(nanopb_PROTOC_PATH ${CMAKE_SOURCE_DIR}/generator/protoc CACHE STRING "")
+
+# Specify location of python binary and avoid discovery.
+set(Python_EXECUTABLE "@Python_EXECUTABLE@" CACHE PATH "Location of python3 executable")
 
 string(TOUPPER @CMAKE_CROSSCOMPILING@ CMAKE_CROSSCOMPILING) # CMake expects TRUE
 if (CMAKE_CROSSCOMPILING)
 	set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY CACHE STRING "")
 endif()
+
+# Override the install directory of the generator. TS will first look at
+# NEWLIB_INSTALL_DIR (aka. BUILD_INSTALL_DIR), then let cmake do system specific
+# search.
+set(nanopb_PYTHON_INSTDIR_OVERRIDE "@BUILD_INSTALL_DIR@/lib/python" CACHE PATH "")
 
 @_cmake_fragment@
