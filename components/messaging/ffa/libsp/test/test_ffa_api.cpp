@@ -287,6 +287,7 @@ TEST(ffa_api, ffa_rxtx_unmap_unknown_response)
 	}
 }
 
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
 TEST(ffa_api, ffa_partition_info_get)
 {
 	const struct ffa_uuid uuid = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
@@ -339,6 +340,70 @@ TEST(ffa_api, ffa_partition_info_get_unknown_response)
 		ffa_partition_info_get(&uuid, &count);
 	}
 }
+#elif CFG_FFA_VERSION >= FFA_VERSION_1_1
+TEST(ffa_api, ffa_partition_info_get)
+{
+	const struct ffa_uuid uuid = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+				       0xcd, 0xef, 0x12, 0x34, 0x56, 0x78,
+				       0x9a, 0xbc, 0xde, 0xf0 };
+	const uint32_t flags = 0x33445566;
+	uint32_t count = 0;
+	uint32_t size = 0;
+	const uint32_t count_result = 0xaabbccdd;
+	const uint32_t size_result = 0xeeff1122;
+
+	svc_result.a0 = 0x84000061;
+	svc_result.a2 = count_result;
+	svc_result.a3 = size_result;
+	expect_ffa_svc(0x84000068, 0x67452301, 0xefcdab89, 0x78563412,
+		       0xf0debc9a, flags, 0, 0, &svc_result);
+
+	ffa_result result = ffa_partition_info_get(&uuid, flags, &count, &size);
+	LONGS_EQUAL(FFA_OK, result);
+	UNSIGNED_LONGS_EQUAL(count_result, count);
+	UNSIGNED_LONGS_EQUAL(size_result, size);
+}
+
+TEST(ffa_api, ffa_partition_info_get_error)
+{
+	const struct ffa_uuid uuid = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+				       0xcd, 0xef, 0x12, 0x34, 0x56, 0x78,
+				       0x9a, 0xbc, 0xde, 0xf0 };
+	const uint32_t flags = 0x33445566;
+	uint32_t count = 0x1234;
+	uint32_t size = 0x5678;
+
+	setup_error_response(-1);
+	expect_ffa_svc(0x84000068, 0x67452301, 0xefcdab89, 0x78563412,
+		       0xf0debc9a, flags, 0, 0, &svc_result);
+
+	ffa_result result = ffa_partition_info_get(&uuid, flags, &count, &size);
+	LONGS_EQUAL(-1, result);
+	UNSIGNED_LONGS_EQUAL(0, count);
+	UNSIGNED_LONGS_EQUAL(0, size);
+}
+
+TEST(ffa_api, ffa_partition_info_get_unknown_response)
+{
+	const struct ffa_uuid uuid = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+				       0xcd, 0xef, 0x12, 0x34, 0x56, 0x78,
+				       0x9a, 0xbc, 0xde, 0xf0 };
+	const uint32_t flags = 0x33445566;
+	uint32_t count = 0;
+	uint32_t size = 0;
+	const uint32_t count_result = 0xaabbccdd;
+	assert_environment_t assert_env;
+
+	svc_result.a0 = 0x12345678;
+	svc_result.a2 = count_result;
+	expect_ffa_svc(0x84000068, 0x67452301, 0xefcdab89, 0x78563412,
+		       0xf0debc9a, flags, 0, 0, &svc_result);
+
+	if (SETUP_ASSERT_ENVIRONMENT(assert_env)) {
+		ffa_partition_info_get(&uuid, flags, &count, &size);
+	}
+}
+#endif /* CFG_FFA_VERSION */
 
 TEST(ffa_api, ffa_id_get)
 {

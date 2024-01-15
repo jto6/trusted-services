@@ -7,6 +7,7 @@
 #define LIBSP_INCLUDE_FFA_API_TYPES_H_
 
 #include "compiler.h"
+#include "ffa_api_defines.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -90,12 +91,16 @@ struct ffa_uuid {
 };
 
 /**
- * @brief Table 8.25: Partition information descriptor
+ * @brief Table 8.25: Partition information descriptor (FF-A v1.0)
+ *        Table 13.37: Partition information descriptor (FF-A v1.1)
  */
 struct ffa_partition_information {
 	uint16_t partition_id;
 	uint16_t execution_context_count;
 	uint32_t partition_properties;
+#if CFG_FFA_VERSION >= FFA_VERSION_1_1
+	struct ffa_uuid uuid;
+#endif
 } __packed;
 
 /**

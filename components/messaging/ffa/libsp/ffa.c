@@ -173,6 +173,7 @@ ffa_result ffa_rxtx_unmap(uint16_t id)
 	return FFA_OK;
 }
 
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
 ffa_result ffa_partition_info_get(const struct ffa_uuid *uuid, uint32_t *count)
 {
 	struct ffa_params result = {0};
@@ -193,6 +194,31 @@ ffa_result ffa_partition_info_get(const struct ffa_uuid *uuid, uint32_t *count)
 	*count = result.a2;
 	return FFA_OK;
 }
+#elif CFG_FFA_VERSION >= FFA_VERSION_1_1
+ffa_result ffa_partition_info_get(const struct ffa_uuid *uuid, uint32_t flags, uint32_t *count,
+				  uint32_t *size)
+{
+	struct ffa_params result = {0};
+	uint32_t abi_uuid[4] = {0};
+
+	ffa_uuid_to_abi_format(uuid, abi_uuid);
+
+	ffa_svc(FFA_PARTITION_INFO_GET, abi_uuid[0], abi_uuid[1], abi_uuid[2],
+		abi_uuid[3], flags, FFA_PARAM_MBZ, FFA_PARAM_MBZ,
+		&result);
+
+	if (result.a0 == FFA_ERROR) {
+		*count = UINT32_C(0);
+		*size = UINT32_C(0);
+		return ffa_get_errorcode(&result);
+	}
+
+	assert(result.a0 == FFA_SUCCESS_32);
+	*count = result.a2;
+	*size = result.a3;
+	return FFA_OK;
+}
+#endif /* CFG_FFA_VERSION */
 
 ffa_result ffa_id_get(uint16_t *id)
 {

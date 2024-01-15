@@ -82,12 +82,14 @@ ffa_result ffa_rxtx_map(const void *tx_buffer, const void *rx_buffer,
  */
 ffa_result ffa_rxtx_unmap(uint16_t id);
 
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
 /**
- * @brief      Requests the SPM to return information about the partition of
+ * @brief      Requests the SPM to return information about the partitions of
  *             the system. Nil UUID can be used to return information about all
  *             the SPs of the system. The information is returned in the RX
  *             buffer of the caller as an array of ffa_partition_information
  *             structures.
+ *             This is an FF-A v1.0 call.
  *
  * @param[in]  uuid   The uuid
  * @param[out] count  Count of partition information descriptors populated in
@@ -96,6 +98,27 @@ ffa_result ffa_rxtx_unmap(uint16_t id);
  * @return     The FF-A error status code
  */
 ffa_result ffa_partition_info_get(const struct ffa_uuid *uuid, uint32_t *count);
+#elif CFG_FFA_VERSION >= FFA_VERSION_1_1
+
+/**
+ * @brief      Requests the SPM to return information about the partitions of
+ *             the system. Nil UUID can be used to return information about all
+ *             the SPs of the system. The information is returned in the RX
+ *             buffer of the caller as an array of ffa_partition_information
+ *             structures.
+ *             By settings the flags parameter, the function can be instructed
+ *             to only return the count of SPs with the matching UUID.
+ *             This is an FF-A v1.1 call.
+ *
+ * @param[in]  uuid     The uuid
+ * @param[in]  flags	FFA_PARTITION_INFO_GET_FLAG_* flag value
+ * @param[out] count    Count of matching SPs
+ * @param[out] size     Size of the partition information descriptors
+ * @return ffa_result
+ */
+ffa_result ffa_partition_info_get(const struct ffa_uuid *uuid, uint32_t flags,
+				  uint32_t *count, uint32_t *size);
+#endif /* CFG_FFA_VERSION */
 
 /**
  * @brief      Returns the 16 bit ID of the calling FF-A component
