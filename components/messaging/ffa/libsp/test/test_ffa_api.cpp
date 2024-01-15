@@ -80,9 +80,14 @@ TEST(ffa_api, ffa_version)
 {
 	uint32_t version = 0;
 	const uint32_t test_version = 0x78901234;
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
+	const uint32_t cfg_ffa_version = 0x00010000;
+#elif CFG_FFA_VERSION >= FFA_VERSION_1_1
+	const uint32_t cfg_ffa_version = 0x00010001;
+#endif /* CFG_FFA_VERSION */
 
 	svc_result.a0 = test_version;
-	expect_ffa_svc(0x84000063, 0x10000U, 0, 0, 0, 0, 0, 0, &svc_result);
+	expect_ffa_svc(0x84000063, cfg_ffa_version, 0, 0, 0, 0, 0, 0, &svc_result);
 
 	ffa_result result = ffa_version(&version);
 	LONGS_EQUAL(FFA_OK, result);
@@ -92,9 +97,14 @@ TEST(ffa_api, ffa_version)
 TEST(ffa_api, ffa_version_error)
 {
 	uint32_t version = 0;
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
+	const uint32_t cfg_ffa_version = 0x00010000;
+#elif CFG_FFA_VERSION >= FFA_VERSION_1_1
+	const uint32_t cfg_ffa_version = 0x00010001;
+#endif /* CFG_FFA_VERSION */
 
 	svc_result.a0 = 0xffffffff;
-	expect_ffa_svc(0x84000063, 0x10000U, 0, 0, 0, 0, 0, 0, &svc_result);
+	expect_ffa_svc(0x84000063, cfg_ffa_version, 0, 0, 0, 0, 0, 0, &svc_result);
 
 	ffa_result result = ffa_version(&version);
 	LONGS_EQUAL(-1, result);

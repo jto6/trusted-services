@@ -9,6 +9,15 @@
 #include <stdint.h>
 #include "util.h"
 
+#define FFA_VERSION_1_0	(0x00010000)
+#define FFA_VERSION_1_1	(0x00010001)
+
+#ifndef CFG_FFA_VERSION
+#error CFG_FFA_VERSION must be defined
+#elif CFG_FFA_VERSION != FFA_VERSION_1_0 && CFG_FFA_VERSION != FFA_VERSION_1_1
+#error Only FF-A versions 1.0 and 1.1 are supported
+#endif
+
 /* Status codes */
 #define FFA_OK				(0)
 #define FFA_NOT_SUPPORTED		(-1)
@@ -101,10 +110,16 @@
 #define FFA_BOOT_INFO_NAME_FMT_UUID	UINT32_C(1)
 
 /* FFA_VERSION */
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
 #define FFA_VERSION_MAJOR		UINT32_C(1)
+#define FFA_VERSION_MINOR		UINT32_C(0)
+#elif CFG_FFA_VERSION == FFA_VERSION_1_1
+#define FFA_VERSION_MAJOR		UINT32_C(1)
+#define FFA_VERSION_MINOR		UINT32_C(1)
+#endif /* CFG_FFA_VERSION */
+
 #define FFA_VERSION_MAJOR_SHIFT		UINT32_C(16)
 #define FFA_VERSION_MAJOR_MASK		GENMASK_32(14, 0)
-#define FFA_VERSION_MINOR		UINT32_C(0)
 #define FFA_VERSION_MINOR_SHIFT		UINT32_C(0)
 #define FFA_VERSION_MINOR_MASK		GENMASK_32(15, 0)
 

@@ -47,6 +47,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -60,6 +61,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -74,6 +76,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -87,6 +90,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -102,6 +106,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -115,6 +120,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -132,6 +138,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -145,6 +152,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -160,6 +168,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -174,6 +183,7 @@ unit_test_add_suite(
 		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
 	COMPILE_DEFINITIONS
 		-DARM64
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -188,6 +198,7 @@ unit_test_add_suite(
 	COMPILE_DEFINITIONS
 		-DARM64
 		-DFFA_DIRECT_MSG_ROUTING_EXTENSION=1
+		-DCFG_FFA_VERSION=0x00010000
 )
 
 unit_test_add_suite(
@@ -204,4 +215,5 @@ unit_test_add_suite(
 	COMPILE_DEFINITIONS
 		-DARM64
 		-DFFA_DIRECT_MSG_ROUTING_EXTENSION=1
+		-DCFG_FFA_VERSION=0x00010000
 )

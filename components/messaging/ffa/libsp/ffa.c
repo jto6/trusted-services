@@ -79,7 +79,7 @@ ffa_result ffa_version(uint32_t *version)
 	uint32_t self_version = 0;
 
 	self_version = (FFA_VERSION_MAJOR << FFA_VERSION_MAJOR_SHIFT) |
-		       (FFA_VERSION_MINOR << FFA_VERSION_MINOR);
+		       (FFA_VERSION_MINOR << FFA_VERSION_MINOR_SHIFT);
 
 	ffa_svc(FFA_VERSION, self_version, FFA_PARAM_MBZ, FFA_PARAM_MBZ,
 		FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ,
