@@ -51,6 +51,24 @@ unit_test_add_suite(
 )
 
 unit_test_add_suite(
+	NAME libsp_ffa_v1_1
+	SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/test/test_ffa_api.cpp
+		${CMAKE_CURRENT_LIST_DIR}/test/test_ffa_memory_descriptors.cpp
+		${CMAKE_CURRENT_LIST_DIR}/mock/mock_ffa_internal_api.cpp
+		${CMAKE_CURRENT_LIST_DIR}/ffa.c
+		${CMAKE_CURRENT_LIST_DIR}/ffa_memory_descriptors.c
+		${CMAKE_CURRENT_LIST_DIR}/mock/mock_assert.cpp
+	INCLUDE_DIRECTORIES
+		${CMAKE_CURRENT_LIST_DIR}/include/
+		${CMAKE_CURRENT_LIST_DIR}/mock
+		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
+	COMPILE_DEFINITIONS
+		-DARM64
+		-DCFG_FFA_VERSION=0x00010001
+)
+
+unit_test_add_suite(
 	NAME libsp_mock_ffa_api
 	SOURCES
 		${CMAKE_CURRENT_LIST_DIR}/mock/test/test_mock_ffa_api.cpp
@@ -62,6 +80,21 @@ unit_test_add_suite(
 	COMPILE_DEFINITIONS
 		-DARM64
 		-DCFG_FFA_VERSION=0x00010000
+)
+
+
+unit_test_add_suite(
+	NAME libsp_mock_ffa_api_v1_1
+	SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/mock/test/test_mock_ffa_api.cpp
+		${CMAKE_CURRENT_LIST_DIR}/mock/mock_ffa_api.cpp
+	INCLUDE_DIRECTORIES
+		${CMAKE_CURRENT_LIST_DIR}/include/
+		${CMAKE_CURRENT_LIST_DIR}/mock
+		${UNIT_TEST_PROJECT_PATH}/components/common/utils/include
+	COMPILE_DEFINITIONS
+		-DARM64
+		-DCFG_FFA_VERSION=0x00010001
 )
 
 unit_test_add_suite(
