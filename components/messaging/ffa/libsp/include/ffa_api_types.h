@@ -161,8 +161,9 @@ struct ffa_mem_access_desc {
 	uint64_t reserved_mbz;
 } __packed;
 
+#if CFG_FFA_VERSION == FFA_VERSION_1_0
 /**
- * @brief Table 5.19: Lend, donate or share memory transaction descriptor
+ * @brief FF-A v1.0 Table 5.19: Lend, donate or share memory transaction descriptor
  */
 struct ffa_mem_transaction_desc {
 	uint16_t sender_id;
@@ -175,6 +176,22 @@ struct ffa_mem_transaction_desc {
 	uint32_t mem_access_desc_count;
 	struct ffa_mem_access_desc mem_access_desc[];
 } __packed;
+#elif CFG_FFA_VERSION >= FFA_VERSION_1_1
+/**
+ * @brief FF-A v1.1 Table 10.20: Memory transaction descriptor
+ */
+struct ffa_mem_transaction_desc {
+	uint16_t sender_id;
+	uint16_t mem_region_attr;
+	uint32_t flags;
+	uint64_t handle;
+	uint64_t tag;
+	uint32_t mem_access_desc_size;
+	uint32_t mem_access_desc_count;
+	uint32_t mem_access_desc_offset;
+	uint8_t reserved_mbz0[12];
+} __packed;
+#endif /* CFG_FFA_VERSION */
 
 /**
  * @brief Table 11.25: Descriptor to relinquish a memory region
