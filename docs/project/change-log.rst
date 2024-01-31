@@ -142,7 +142,7 @@ Known limitations:
 Test Report
 ^^^^^^^^^^^
 
-Please find the Test Report covering this release in the `tf.org wiki`_.
+Please find the Test Report covering this release in the `project wiki`_.
 
 
 --------------
@@ -151,13 +151,13 @@ Please find the Test Report covering this release in the `tf.org wiki`_.
 .. _`Psacertified v1.0 APIs`: https://www.psacertified.org/development-resources/building-in-security/specifications-implementations/
 .. _`OP-TEE v3.19`: https://github.com/OP-TEE/optee_os/tree/3.19.0
 .. _`Yocto meta-arm` : https://gitlab.oss.arm.com/engineering/yocto/meta-arm/-/tree/master/meta-arm/recipes-security/trusted-services
-.. _`tf.org wiki`: https://developer.trustedfirmware.org/w/trusted-services/test-reports/v1.0.0-beta/
+.. _`project wiki`: https://github.com/Trusted-Services/trusted-services/wiki/Trusted-Services-test-reports
 .. _`AEM FVP`: https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
 .. _`PSA API certification tests`: https://github.com/ARM-software/psa-arch-tests
 .. _`OP-TEE git repo documentation`: https://optee.readthedocs.io/en/latest/building/gits/build.html
 .. _`Corstone-1000 product homepage`: https://developer.arm.com/Processors/Corstone-1000
 .. _`Arm FWU-A specification`: https://developer.arm.com/documentation/den0118
 
-*Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.*
+*Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.*
 
 SPDX-License-Identifier: BSD-3-Clause
