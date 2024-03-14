@@ -15,6 +15,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/Uuid.cmake)
 		export_sp(
 			SP_FFA_UUID_CANON <uuid_str_canon>
 			SP_NAME <name> MK_IN <.mk path>
+			SP_BOOT_ORDER <number>
 			DTS_IN <DTS path>
 			DTS_MEM_REGIONS <Memory region manifest path>
 			JSON_IN <JSON path>
@@ -28,6 +29,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/Uuid.cmake)
 	``SP_BIN_UUID_CANON``
 	The UUID of the SP binary a canonical string. When not set use the
 	SP_FFA_UUID_CANON as the SP_BIN_UUID_CANON.
+
+	``SP_BOOT_ORDER``
+	Boot-order of the SP. 0 will be booted first.
 
 	``SP_NAME``
 	The name of the SP.
@@ -47,7 +51,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/Uuid.cmake)
 #]===]
 function (export_sp)
 	set(options)
-	set(oneValueArgs SP_FFA_UUID_CANON SP_BIN_UUID_CANON SP_NAME MK_IN DTS_IN DTS_MEM_REGIONS JSON_IN)
+	set(oneValueArgs SP_FFA_UUID_CANON SP_BIN_UUID_CANON SP_BOOT_ORDER SP_NAME MK_IN DTS_IN DTS_MEM_REGIONS JSON_IN)
 	set(multiValueArgs)
 	cmake_parse_arguments(EXPORT "${options}" "${oneValueArgs}"
 						"${multiValueArgs}" ${ARGN} )
@@ -58,6 +62,9 @@ function (export_sp)
 	if(NOT DEFINED EXPORT_SP_BIN_UUID_CANON)
 		# We use the same UUID for the binary and FF-A if the UUID of the SP binary is not set
 		set(EXPORT_SP_BIN_UUID_CANON ${EXPORT_SP_FFA_UUID_CANON})
+	endif()
+	if(NOT DEFINED EXPORT_SP_BOOT_ORDER)
+		message(FATAL_ERROR "export_sp: mandatory parameter SP_BOOT_ORDER not defined!")
 	endif()
 	if(NOT DEFINED EXPORT_SP_NAME)
 		message(FATAL_ERROR "export_sp: mandatory parameter SP_NAME not defined!")

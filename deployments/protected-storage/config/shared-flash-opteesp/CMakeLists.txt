@@ -22,6 +22,7 @@ set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
 set(TRACE_PREFIX "PS" CACHE STRING "Trace prefix")
+set(SP_BOOT_ORDER "3")
 
 target_include_directories(protected-storage PRIVATE
 	${CMAKE_CURRENT_LIST_DIR}
@@ -72,6 +73,7 @@ include(${TS_ROOT}/tools/cmake/common/ExportSp.cmake)
 export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME "protected-storage"
 	MK_IN ${TS_ROOT}/environments/opteesp/sp.mk.in
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_protected-storage.dts.in

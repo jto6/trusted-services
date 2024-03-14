@@ -23,6 +23,7 @@ target_include_directories(fwu PRIVATE "${TOP_LEVEL_INCLUDE_DIRS}")
 set(SP_BIN_UUID_CANON "6823a838-1b06-470e-9774-0cce8bfb53fd")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
+set(SP_BOOT_ORDER "7")
 
 target_include_directories(fwu PRIVATE
 	${CMAKE_CURRENT_LIST_DIR}
@@ -90,6 +91,7 @@ include(${TS_ROOT}/tools/cmake/common/ExportSp.cmake)
 export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME "fwu"
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_fwu.dts.in
 	JSON_IN ${TS_ROOT}/environments/opteesp/sp_pkg.json.in

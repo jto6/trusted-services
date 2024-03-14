@@ -30,6 +30,7 @@ target_include_directories(crypto PRIVATE "${TOP_LEVEL_INCLUDE_DIRS}")
 set(SP_BIN_UUID_CANON "d9df52d5-16a2-4bb2-9aa4-d26d3b84e8c0")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_HEAP_SIZE "490 * 1024" CACHE STRING "SP heap size in bytes")
+set(SP_BOOT_ORDER "4")
 set(TRACE_PREFIX "CRYPTO" CACHE STRING "Trace prefix")
 
 target_include_directories(crypto PRIVATE
@@ -91,6 +92,7 @@ include(${TS_ROOT}/tools/cmake/common/ExportSp.cmake)
 export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME "crypto"
 	MK_IN ${TS_ROOT}/environments/opteesp/sp.mk.in
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_crypto.dts.in

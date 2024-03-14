@@ -25,6 +25,7 @@ target_include_directories(logging PRIVATE "${TOP_LEVEL_INCLUDE_DIRS}")
 set(SP_BIN_UUID_CANON "da9dffbd-d590-40ed-975f-19c65a3d52d3")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
+set(SP_BOOT_ORDER "0")
 set(TRACE_PREFIX "LOGGING" CACHE STRING "Trace prefix")
 
 target_include_directories(logging PRIVATE
@@ -88,6 +89,7 @@ export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
 	SP_UUID_LE ${SP_UUID_LE}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME "logging"
 	MK_IN ${TS_ROOT}/environments/opteesp/sp.mk.in
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_logging.dts.in
