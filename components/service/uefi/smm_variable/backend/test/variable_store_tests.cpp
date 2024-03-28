@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -591,9 +591,15 @@ TEST(UefiVariableStoreTests, enumerateStoreContents)
 	/* Enumerate store contents */
 	next_name->NameSize = sizeof(int16_t);
 	next_name->Name[0] = 0;
-
+	/* Check if the correct NameSize is returned if max_name_len is too small */
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    0, &total_len);
+	UNSIGNED_LONGLONGS_EQUAL(EFI_BUFFER_TOO_SMALL, status);
+	UNSIGNED_LONGLONGS_EQUAL(sizeof(var_name_1), next_name->NameSize);
+
+	/* And then used the previously received next_name->NameSize as max_name_len */
+	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
+							    next_name->NameSize, &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_1, next_name->Name, next_name->NameSize));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Arm Limited. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -418,9 +418,15 @@ uefi_variable_store_get_next_variable_name(const struct uefi_variable_store *con
 			&context->variable_index, &cur->Guid, cur->NameSize, cur->Name, &status);
 
 		if (info && (status == EFI_SUCCESS)) {
+			/* The NameSize has to be set in every case according to the UEFI specs.
+			 * In case of EFI_BUFFER_TOO_SMALL it has to reflect the size of buffer
+			 * needed.
+			 */
+			cur->NameSize = info->metadata.name_size;
+			*total_length = sizeof(SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME);
+
 			if (info->metadata.name_size <= max_name_len) {
 				cur->Guid = info->metadata.guid;
-				cur->NameSize = info->metadata.name_size;
 				memcpy(cur->Name, info->metadata.name, info->metadata.name_size);
 
 				*total_length =
@@ -452,7 +458,8 @@ uefi_variable_store_get_next_variable_name(const struct uefi_variable_store *con
 	if (status != EFI_SUCCESS) {
 		memset(cur->Name, 0, max_name_len);
 		memset(&cur->Guid, 0, sizeof(EFI_GUID));
-		cur->NameSize = 0;
+		if (status != EFI_BUFFER_TOO_SMALL)
+			cur->NameSize = 0;
 	}
 
 	return status;
