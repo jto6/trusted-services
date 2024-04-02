@@ -44,6 +44,12 @@ set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/libmbed_only.h"
 include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(env-test PRIVATE MbedTLS::mbedcrypto)
 
+# Provide the config path to mbedtls
+target_compile_definitions(env-test
+	PRIVATE
+		MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}"
+)
+
 #-------------------------------------------------------------------------------
 #  This test suite depends on platform specific drivers
 #
