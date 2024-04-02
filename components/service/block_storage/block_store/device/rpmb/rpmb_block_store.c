@@ -55,9 +55,8 @@ static psa_status_t rpmb_block_store_read(void *context, uint32_t client_id,
 	const struct storage_partition *storage_partition = NULL;
 	psa_status_t status = PSA_ERROR_GENERIC_ERROR;
 	uint8_t temp[RPMB_DATA_SIZE] = { 0 };
-	size_t block_count = 0;
 	size_t end_offset = 0;
-	size_t i = 0;
+	size_t copy_length = 0;
 
 	if (!block_store)
 		return PSA_ERROR_INVALID_ARGUMENT;
@@ -74,28 +73,20 @@ static psa_status_t rpmb_block_store_read(void *context, uint32_t client_id,
 		return status;
 
 	storage_partition = &block_store->base_block_device.storage_partition;
-	block_count = ROUNDUP_DIV(end_offset, RPMB_DATA_SIZE);
 
 	*data_len = 0;
 
-	for (i = 0; i < block_count; i++) {
-		size_t copy_length = 0;
+	if (!storage_partition_is_lba_legal(storage_partition, lba))
+		return PSA_ERROR_INVALID_ARGUMENT;
 
-		if (!storage_partition_is_lba_legal(storage_partition, lba + i))
-			return PSA_ERROR_INVALID_ARGUMENT;
+	status = rpmb_frontend_read(block_store->frontend, lba, temp, 1);
+	if (status != PSA_SUCCESS)
+		return status;
 
-		status = rpmb_frontend_read(block_store->frontend, lba + i, temp, 1);
-		if (status != PSA_SUCCESS)
-			return status;
+	copy_length = MIN(buffer_size, sizeof(temp) - offset);
+	memcpy(buffer, temp + offset, copy_length);
 
-		copy_length = MIN(buffer_size, sizeof(temp) - offset);
-		memcpy(buffer, temp + offset, copy_length);
-
-		buffer += copy_length;
-		buffer_size -= copy_length;
-		*data_len += copy_length;
-		offset = 0;
-	}
+	*data_len += copy_length;
 
 	return status;
 }
@@ -109,8 +100,7 @@ static psa_status_t rpmb_block_store_write(void *context, uint32_t client_id,
 	const struct storage_partition *storage_partition = NULL;
 	uint8_t temp[RPMB_DATA_SIZE] = { 0 };
 	psa_status_t status = PSA_ERROR_GENERIC_ERROR;
-	size_t i = 0;
-	size_t block_count = 0;
+	size_t copy_length = 0;
 
 	if (!block_store)
 		return PSA_ERROR_INVALID_ARGUMENT;
@@ -122,32 +112,23 @@ static psa_status_t rpmb_block_store_write(void *context, uint32_t client_id,
 
 	storage_partition = &block_store->base_block_device.storage_partition;
 
-	block_count = ROUNDUP_DIV(offset + data_len, RPMB_DATA_SIZE);
+	if (!storage_partition_is_lba_legal(storage_partition, lba))
+		return PSA_ERROR_INVALID_ARGUMENT;
 
-	for (i = 0; i < block_count; i++) {
-		size_t copy_length = 0;
-
-		if (!storage_partition_is_lba_legal(storage_partition, lba + i))
-			return PSA_ERROR_INVALID_ARGUMENT;
-
-		copy_length = MIN(data_len, sizeof(temp) - offset);
-		if (copy_length != sizeof(temp)) {
-			status = rpmb_frontend_read(block_store->frontend, lba + i, temp, 1);
-			if (status != PSA_SUCCESS)
-				return status;
-		}
-
-		memcpy(temp + offset, data, copy_length);
-
-		status = rpmb_frontend_write(block_store->frontend, lba + i, temp, 1);
+	copy_length = MIN(data_len, sizeof(temp) - offset);
+	if (copy_length != sizeof(temp)) {
+		status = rpmb_frontend_read(block_store->frontend, lba, temp, 1);
 		if (status != PSA_SUCCESS)
 			return status;
-
-		data += copy_length;
-		data_len -= copy_length;
-		*num_written += copy_length;
-		offset = 0;
 	}
+
+	memcpy(temp + offset, data, copy_length);
+
+	status = rpmb_frontend_write(block_store->frontend, lba, temp, 1);
+	if (status != PSA_SUCCESS)
+		return status;
+
+	*num_written += copy_length;
 
 	return status;
 }
