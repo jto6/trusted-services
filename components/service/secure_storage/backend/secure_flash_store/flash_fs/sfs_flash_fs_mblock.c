@@ -920,7 +920,7 @@ psa_status_t sfs_flash_fs_mblock_reserve_file(
 psa_status_t sfs_flash_fs_mblock_reset_metablock(
                                               struct sfs_flash_fs_ctx_t *fs_ctx)
 {
-    struct sfs_block_meta_t block_meta;
+    struct sfs_block_meta_t block_meta = { 0 };
     psa_status_t err;
     uint32_t i;
     uint32_t metablock_to_erase_first = SFS_METADATA_BLOCK0;

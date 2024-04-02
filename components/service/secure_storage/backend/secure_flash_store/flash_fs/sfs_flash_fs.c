@@ -83,11 +83,11 @@ psa_status_t sfs_flash_fs_file_create(struct sfs_flash_fs_ctx_t *fs_ctx,
                                       uint32_t flags,
                                       const uint8_t *data)
 {
-    struct sfs_block_meta_t block_meta;
+    struct sfs_block_meta_t block_meta = { 0 };
     uint32_t cur_phys_block;
     int32_t err;
     uint32_t idx;
-    struct sfs_file_meta_t file_meta;
+    struct sfs_file_meta_t file_meta = { 0 };
 
 #if (SFS_FLASH_MAX_ALIGNMENT != 1)
     /* Set the max_size to be aligned with the flash program unit */
