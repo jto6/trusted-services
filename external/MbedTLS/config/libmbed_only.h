@@ -22,4 +22,8 @@
 #undef MBEDTLS_AESCE_C
 #undef MBEDTLS_PADLOCK_C
 
+#define MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+#define BACKEND_CRYPTO_API_ADD_PREFIX(f) __mbedtls_backend_##f
+#include "../../../components/service/crypto/backend/prefixed_crypto_api.h"
+
 #endif /* CONFIG_LIBMBED_ONLY_H */
