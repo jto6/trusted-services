@@ -23,7 +23,7 @@ target_include_directories(attestation PRIVATE "${TOP_LEVEL_INCLUDE_DIRS}")
 set(SP_BIN_UUID_CANON "a1baf155-8876-4695-8f7c-54955e8db974")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
-set(SP_BOOT_ORDER "5")
+set(SP_BOOT_ORDER "5" CACHE STRING "Boot order of the SP")
 set(TRACE_PREFIX "ATT" CACHE STRING "Trace prefix")
 
 target_include_directories(attestation PRIVATE

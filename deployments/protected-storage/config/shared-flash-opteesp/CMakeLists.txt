@@ -22,7 +22,7 @@ set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
 set(TRACE_PREFIX "PS" CACHE STRING "Trace prefix")
-set(SP_BOOT_ORDER "3")
+set(SP_BOOT_ORDER "3" CACHE STRING "Boot order of the SP")
 
 target_include_directories(protected-storage PRIVATE
 	${CMAKE_CURRENT_LIST_DIR}

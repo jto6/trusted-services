@@ -28,7 +28,7 @@ set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(TRACE_PREFIX "ATT" CACHE STRING "Trace prefix")
 set(SP_STACK_SIZE "64 * 1024" CACHE STRING "Stack size")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "Heap size")
-set(SP_BOOT_ORDER "5")
+set(SP_BOOT_ORDER "5" CACHE STRING "Boot order of the SP")
 
 #-------------------------------------------------------------------------------
 #  Default deployment specific configuration

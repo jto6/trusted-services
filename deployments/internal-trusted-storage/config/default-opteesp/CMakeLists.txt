@@ -22,7 +22,7 @@ set(SP_BIN_UUID_CANON "dc1eef48-b17a-4ccf-ac8b-dfcff7711b14")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
-set(SP_BOOT_ORDER "2")
+set(SP_BOOT_ORDER "2" CACHE STRING "Boot order of the SP")
 set(TRACE_PREFIX "ITS" CACHE STRING "Trace prefix")
 
 target_include_directories(internal-trusted-storage PRIVATE

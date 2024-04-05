@@ -29,7 +29,7 @@ set(SP_BIN_UUID_CANON "da9dffbd-d590-40ed-975f-19c65a3d52d3")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
 set(SP_STACK_SIZE "64 * 1024" CACHE STRING "Stack size")
-set(SP_BOOT_ORDER "0")
+set(SP_BOOT_ORDER "0" CACHE STRING "Boot order of the SP")
 set(TRACE_PREFIX "LOGGING" CACHE STRING "Trace prefix")
 
 target_include_directories(logging PRIVATE

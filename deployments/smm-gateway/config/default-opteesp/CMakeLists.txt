@@ -33,7 +33,7 @@ endif()
 
 set(SP_BIN_UUID_CANON "ed32d533-99e6-4209-9cc0-2d72cdd998a7")
 set(SP_FFA_UUID_CANON "${SP_BIN_UUID_CANON}")
-set(SP_BOOT_ORDER "8")
+set(SP_BOOT_ORDER "8" CACHE STRING "Boot order of the SP")
 
 if (UEFI_AUTH_VAR)
 set(SP_HEAP_SIZE "64 * 1024" CACHE STRING "SP heap size in bytes")

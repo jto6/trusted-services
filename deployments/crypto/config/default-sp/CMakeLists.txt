@@ -35,7 +35,7 @@ set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(TRACE_PREFIX "CRYPTO" CACHE STRING "Trace prefix")
 set(SP_STACK_SIZE "64 * 1024" CACHE STRING "Stack size")
 set(SP_HEAP_SIZE "490 * 1024" CACHE STRING "Heap size")
-set(SP_BOOT_ORDER "4")
+set(SP_BOOT_ORDER "4" CACHE STRING "Boot order of the SP")
 
 #-------------------------------------------------------------------------------
 #  Components that are specific to deployment in the opteesp environment.

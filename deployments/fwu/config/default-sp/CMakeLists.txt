@@ -27,7 +27,7 @@ set(SP_BIN_UUID_CANON "6823a838-1b06-470e-9774-0cce8bfb53fd")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_STACK_SIZE "64 * 1024" CACHE STRING "Stack size")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "Heap size")
-set(SP_BOOT_ORDER "7")
+set(SP_BOOT_ORDER "7" CACHE STRING "Boot order of the SP")
 
 #-------------------------------------------------------------------------------
 #  Configure trace output

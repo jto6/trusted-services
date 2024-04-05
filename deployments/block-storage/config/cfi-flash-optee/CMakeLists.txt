@@ -28,7 +28,7 @@ target_include_directories(block-storage PRIVATE "${TOP_LEVEL_INCLUDE_DIRS}")
 set(SP_BIN_UUID_CANON "63646e80-eb52-462f-ac4f-8cdf3987519c")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(SP_HEAP_SIZE "120 * 1024" CACHE STRING "SP heap size in bytes")
-set(SP_BOOT_ORDER "1")
+set(SP_BOOT_ORDER "1" CACHE STRING "Boot order of the SP")
 set(TRACE_PREFIX "BLOCK" CACHE STRING "Trace prefix")
 
 target_include_directories(block-storage PRIVATE
