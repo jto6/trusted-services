@@ -65,6 +65,7 @@ add_components(
 		"components/common/utils"
 		"components/common/trace"
 		"components/common/crc32"
+		"components/common/mbedtls"
 		"components/config/ramstore"
 		"components/service/common/include"
 		"components/service/common/client"

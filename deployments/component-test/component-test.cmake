@@ -38,6 +38,7 @@ add_components(
 		"components/common/endian/test"
 		"components/common/crc32"
 		"components/common/crc32/test"
+		"components/common/mbedtls"
 		"components/config/ramstore"
 		"components/config/ramstore/test"
 		"components/messaging/ffa/libsp/mock"

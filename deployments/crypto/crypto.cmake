@@ -8,6 +8,7 @@
 add_components(TARGET "crypto"
 	BASE_DIR ${TS_ROOT}
 	COMPONENTS
+		"components/common/mbedtls"
 		"components/common/tlv"
 		"components/rpc/common/interface"
 		"components/rpc/common/endpoint"
