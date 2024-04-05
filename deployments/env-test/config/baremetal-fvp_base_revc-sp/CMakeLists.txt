@@ -24,6 +24,7 @@ target_include_directories(env-test PRIVATE "${TOP_LEVEL_INCLUDE_DIRS}")
 set(SP_NAME "env-test")
 set(SP_BIN_UUID_CANON "33c75baf-ac6a-4fe4-8ac7-e9909bee2d17")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
+set(SP_BOOT_ORDER "0")
 set(TRACE_PREFIX "ENVTEST" CACHE STRING "Trace prefix")
 set(SP_STACK_SIZE "64 * 1024" CACHE STRING "Stack size")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "Heap size")
@@ -90,6 +91,7 @@ include(${TS_ROOT}/tools/cmake/common/ExportSp.cmake REQUIRED)
 export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME ${SP_NAME}
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_${SP_NAME}.dts.in
 	DTS_MEM_REGIONS ${SP_BIN_UUID_CANON}_memory_regions.dtsi

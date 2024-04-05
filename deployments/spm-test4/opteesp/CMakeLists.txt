@@ -17,6 +17,7 @@ set(SP_FFA_UUID_CANON "${SP_BIN_UUID_CANON}")
 set(SP_FFA_UUID_CANON "23eb0100-e32a-4497-9052-2f11e584afa6")
 set(SP_NUMBER 4)
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
+set(SP_BOOT_ORDER "0")
 set(TRACE_PREFIX "SPM-TEST${SP_NUMBER}" CACHE STRING "Trace prefix")
 
 #-------------------------------------------------------------------------------
