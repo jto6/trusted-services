@@ -195,6 +195,7 @@ static struct variable_entry *add_entry(const struct variable_index *context, co
 			/* Initialize metadata */
 			info->metadata.uid = generate_uid(context, guid, name_size, name);
 			info->metadata.guid = *guid;
+			memset(&info->metadata.timestamp, 0, sizeof(EFI_TIME));
 			info->metadata.attributes = 0;
 			info->metadata.name_size = name_size;
 			memcpy(info->metadata.name, name, name_size);

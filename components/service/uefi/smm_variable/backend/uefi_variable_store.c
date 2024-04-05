@@ -76,6 +76,7 @@ static efi_status_t verify_var_by_key_var(const efi_data_map *new_var,
 					  const uint8_t *hash_buffer, size_t hash_len);
 
 static efi_status_t authenticate_variable(const struct uefi_variable_store *context,
+					  EFI_TIME *stored_timestamp,
 					  SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var);
 #endif
 
@@ -195,6 +196,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 					      const SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var)
 {
 	bool should_sync_index = false;
+	EFI_TIME stored_timestamp = { 0 };
 
 	/* Validate incoming request */
 	efi_status_t status = check_name_terminator(var->Name, var->NameSize);
@@ -223,6 +225,9 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			return EFI_OUT_OF_RESOURCES;
 	}
 
+	/* Save the timestamp into a buffer, which can be overwritten by the authentication function */
+	memcpy(&stored_timestamp, &info->metadata.timestamp, sizeof(EFI_TIME));
+
 	/* Control access */
 	status = check_access_permitted_on_set(context, info, var);
 
@@ -238,7 +243,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			if (info->metadata.attributes &
 			    EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 				status = authenticate_variable(
-					context, (SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
+					context, &stored_timestamp, (SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
 
 				if (status != EFI_SUCCESS)
 					return status;
@@ -324,7 +329,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			 */
 			if (var->Attributes & EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 				status = authenticate_variable(
-					context, (SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
+					context, &stored_timestamp, (SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
 
 				if (status != EFI_SUCCESS)
 					return status;
@@ -356,9 +361,11 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 		if (should_sync_index)
 			status = sync_variable_index(context);
 
-		/* Store any variable data to the storage backend */
-		if (info->is_variable_set && (status == EFI_SUCCESS))
+		/* Store any variable data to the storage backend with the updated metadata */
+		if (info->is_variable_set && (status == EFI_SUCCESS)) {
+			memcpy(&info->metadata.timestamp, &stored_timestamp, sizeof(EFI_TIME));
 			status = store_variable_data(context, info, var);
+		}
 	}
 
 	variable_index_remove_unused_entry(&context->variable_index, info);
@@ -1074,6 +1081,7 @@ static efi_status_t verify_var_by_key_var(const efi_data_map *new_var,
  * then verifies it.
  */
 static efi_status_t authenticate_variable(const struct uefi_variable_store *context,
+					  EFI_TIME *stored_timestamp,
 					  SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var)
 {
 	efi_status_t status = EFI_SUCCESS;
@@ -1191,15 +1199,27 @@ static efi_status_t authenticate_variable(const struct uefi_variable_store *cont
 	 *
 	 * UEFI: Page 253
 	 * 2. Verify that Pad1, Nanosecond, TimeZone, Daylight and Pad2 components
-	 * of the TimeStamp value are set to zero. Unless the EFI_VARIABLE_APPEND_WRITE
-	 * attribute is set, verify that the TimeStamp value is later than the current
-	 * timestamp value associated with the variable
+	 * of the TimeStamp value are set to zero.
 	 */
 	if ((var_map.efi_auth_descriptor->TimeStamp.Pad1 != 0) ||
 	    (var_map.efi_auth_descriptor->TimeStamp.Pad2 != 0) ||
 	    (var_map.efi_auth_descriptor->TimeStamp.Nanosecond != 0) ||
 	    (var_map.efi_auth_descriptor->TimeStamp.TimeZone != 0) ||
 	    (var_map.efi_auth_descriptor->TimeStamp.Daylight != 0)) {
+		return EFI_SECURITY_VIOLATION;
+	}
+
+	/**
+	 * UEFI: Page 253
+	 * Unless the EFI_VARIABLE_APPEND_WRITE attribute is set, verify
+	 * that the TimeStamp value is later than the current
+	 * timestamp value associated with the variable
+	 */
+	if (memcmp(&var_map.efi_auth_descriptor->TimeStamp, stored_timestamp, sizeof(EFI_TIME)) > 0) {
+		/* Save new timestamp */
+		memcpy(stored_timestamp, &var_map.efi_auth_descriptor->TimeStamp, sizeof(EFI_TIME));
+	} else if (!(var->Attributes & EFI_VARIABLE_APPEND_WRITE)) {
+		EMSG("Timestamp violation");
 		return EFI_SECURITY_VIOLATION;
 	}
 

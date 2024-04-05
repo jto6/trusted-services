@@ -9,6 +9,7 @@
 #define VARIABLE_INDEX_H
 
 #include <protocols/common/efi/efi_status.h>
+#include <protocols/common/efi/efi_types.h>
 #include <protocols/service/smm_variable/smm_variable_proto.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -32,6 +33,7 @@ extern "C" {
  */
 struct variable_metadata {
 	EFI_GUID guid;
+	EFI_TIME timestamp;
 	size_t name_size;
 	int16_t name[VARIABLE_INDEX_MAX_NAME_SIZE];
 	uint32_t attributes;
