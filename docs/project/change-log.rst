@@ -4,6 +4,49 @@ Change Log & Release Notes
 This document contains a summary of the new features, changes, fixes and known issues in each release of Trusted
 Services.
 
+Version <next>
+--------------
+
+- Trustedfirmware.org has deprecated Phabricator, the wiki and issue tracking provider. This functionality has been
+  moved to GitHub. See the `Trusted Services organization`_. The project wiki has been moved
+  `to here <https://github.com/Trusted-Services/trusted-services/wiki>`_
+
+
+Feature Highlights
+^^^^^^^^^^^^^^^^^^
+
+- Add documentation covering the :ref:`OP-TEE SPMC tests`.
+- Extend the :ref:`UEFI SMM Services` to support Authenticated Variables.
+- Introduce a work in progress RPMB implementation and integrate it to the Block Storage service. The current
+  configuration uses an SWd RAM buffer for data storage, and is not connected to the RPMB provider running in the NWd.
+  This is the first baseline to implement a scenario where the RPMB owner is an S-EL0 SP.
+- Introduce the :ref:`Logging Service`.
+- Add crypto key store partitioning support to the Crypto Service. This feature allows isolating clients running in
+  different SPs.
+
+Updated external components
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- MbedTLS version int the Crypto service is updated to v3.5.1.
+
+Breaking changes
+^^^^^^^^^^^^^^^^
+
+Resolved issues
+^^^^^^^^^^^^^^^
+
+- Fix psa-ps-api-test test case 414.
+- Crypto key store partitioning has been implemented, and clients accessing the crypto service from different FF-A
+  endpoints can not access each other's assets anymore.
+
+Known limitations
+^^^^^^^^^^^^^^^^^
+
+- UEFI private variable authentication is not implemented in an UEFI compliant way. Currently such variables are
+  authenticated by the certificates stored on the `DB` variable which is incorrect. Instead an implementation defined
+  variable should be used to store the needed certificates. The plan is to follow ``EDK2`` use ``certdb`` and
+  ``certdbv`` variables for this purpose.
+
 Version 1.0.0
 -------------
 
@@ -157,6 +200,8 @@ Please find the Test Report covering this release in the `project wiki`_.
 .. _`OP-TEE git repo documentation`: https://optee.readthedocs.io/en/latest/building/gits/build.html
 .. _`Corstone-1000 product homepage`: https://developer.arm.com/Processors/Corstone-1000
 .. _`Arm FWU-A specification`: https://developer.arm.com/documentation/den0118
+.. _`Trusted Services organization`: https://github.com/Trusted-Services
+
 
 *Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.*
 
