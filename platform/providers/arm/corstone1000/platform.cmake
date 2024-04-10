@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# Platform definition for the 'fvp_base_revc-2xaem8a' virtual platform.
+# Platform definition for the Corstone-1000 platform.
 #-------------------------------------------------------------------------------
 
 set(SMM_GATEWAY_MAX_UEFI_VARIABLES 80 CACHE STRING "Maximum UEFI variable count")
@@ -13,6 +13,7 @@ set(SMM_SP_HEAP_SIZE 48*1024 CACHE STRING "SMM gateway SP heap size")
 target_compile_definitions(${TGT} PRIVATE
 	SMM_VARIABLE_INDEX_STORAGE_UID=0x787
 	PLAT_RSS_COMMS_PAYLOAD_MAX_SIZE=0x2080
+	COMMS_MHU_MSG_SIZE=0x3500
 )
 
 get_property(_platform_driver_dependencies TARGET ${TGT}
