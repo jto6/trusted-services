@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -24,10 +24,6 @@ data:
             - "-GUnix Makefiles"
     - name: "block-storage-default-sp"
       src: "$TS_ROOT/deployments/block-storage/config/default-sp"
-      params:
-            - "-GUnix Makefiles"
-    - name: "block-storage-edk2-secure-flash-opteesp"
-      src: "$TS_ROOT/deployments/block-storage/config/edk2-secure-flash-opteesp"
       params:
             - "-GUnix Makefiles"
     - name: "block-storage-semihosted-opteesp"
