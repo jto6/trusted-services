@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -44,6 +44,9 @@ set(GIT_OPTIONS
 	GIT_REPOSITORY ${NANOPB_URL}
 	GIT_TAG ${NANOPB_REFSPEC}
 	GIT_SHALLOW FALSE
+	#See the .patch file for details on why it is needed.
+	PATCH_COMMAND git stash
+		COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/0001-Fix-race-condition-in-directory-creation.patch
   )
 
 # Only pass libc settings to nanopb if needed. For environments where the standard
