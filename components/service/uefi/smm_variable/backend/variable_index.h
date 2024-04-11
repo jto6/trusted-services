@@ -25,6 +25,7 @@ extern "C" {
  * Implementation limits
  */
 #define VARIABLE_INDEX_MAX_NAME_SIZE (64)
+#define FINGERPRINT_SIZE             (32)
 
 /**
  * \brief variable_metadata structure definition
@@ -34,6 +35,7 @@ extern "C" {
 struct variable_metadata {
 	EFI_GUID guid;
 	EFI_TIME timestamp;
+	uint8_t fingerprint[FINGERPRINT_SIZE];
 	size_t name_size;
 	int16_t name[VARIABLE_INDEX_MAX_NAME_SIZE];
 	uint32_t attributes;

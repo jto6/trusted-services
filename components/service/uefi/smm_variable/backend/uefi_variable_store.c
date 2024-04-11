@@ -75,8 +75,12 @@ static efi_status_t verify_var_by_key_var(const efi_data_map *new_var,
 					  const efi_data_map *key_store_var,
 					  const uint8_t *hash_buffer, size_t hash_len);
 
+static bool is_private_auth_var(SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var);
+
 static efi_status_t authenticate_variable(const struct uefi_variable_store *context,
 					  EFI_TIME *stored_timestamp,
+					  uint8_t (*fingerprint)[FINGERPRINT_SIZE],
+					  bool new_variable,
 					  SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var);
 
 static efi_status_t authenticate_secure_boot_variable(const struct uefi_variable_store *context,
@@ -84,6 +88,14 @@ static efi_status_t authenticate_secure_boot_variable(const struct uefi_variable
 						      uint8_t* hash_buffer,
 						      size_t hash_len,
 						      uint64_t max_variable_size);
+
+static efi_status_t authenticate_private_variable(const struct uefi_variable_store *context,
+						  efi_data_map* var_map,
+						  uint8_t* hash_buffer,
+						  size_t hash_len,
+						  uint64_t max_variable_size,
+						  bool new_variable,
+						  uint8_t (*fingerprint)[FINGERPRINT_SIZE]);
 #endif
 
 static efi_status_t store_variable_data(const struct uefi_variable_store *context,
@@ -203,6 +215,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 {
 	bool should_sync_index = false;
 	EFI_TIME stored_timestamp = { 0 };
+	uint8_t fingerprint[FINGERPRINT_SIZE] = { 0 };
 
 	/* Validate incoming request */
 	efi_status_t status = check_name_terminator(var->Name, var->NameSize);
@@ -231,8 +244,9 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			return EFI_OUT_OF_RESOURCES;
 	}
 
-	/* Save the timestamp into a buffer, which can be overwritten later */
+	/* Save the timestamp and fingerprints into a buffer, which can be overwritten later */
 	memcpy(&stored_timestamp, &info->metadata.timestamp, sizeof(EFI_TIME));
+	memcpy(&fingerprint, &info->metadata.fingerprint, FINGERPRINT_SIZE);
 
 	/* Control access */
 	status = check_access_permitted_on_set(context, info, var);
@@ -250,6 +264,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			    EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 				status = authenticate_variable(
 					context, &stored_timestamp,
+					&fingerprint, false,
 					(SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
 
 				if (status != EFI_SUCCESS)
@@ -337,6 +352,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			if (var->Attributes & EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 				status = authenticate_variable(
 					context, &stored_timestamp,
+					&fingerprint, true,
 					(SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
 
 				if (status != EFI_SUCCESS)
@@ -372,6 +388,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 		/* Store any variable data to the storage backend with the updated metadata */
 		if (info->is_variable_set && (status == EFI_SUCCESS)) {
 			memcpy(&info->metadata.timestamp, &stored_timestamp, sizeof(EFI_TIME));
+			memcpy(&info->metadata.fingerprint, &fingerprint, FINGERPRINT_SIZE);
 			status = store_variable_data(context, info, var);
 		}
 	}
@@ -1000,15 +1017,6 @@ select_verification_keys(const efi_data_map new_var, EFI_GUID global_variable_gu
 		create_smm_variable(&(allowed_key_store_variables[1]),
 				    sizeof(EFI_KEY_EXCHANGE_KEY_NAME), maximum_variable_size,
 				    (uint8_t *)EFI_KEY_EXCHANGE_KEY_NAME, &global_variable_guid);
-	} else {
-		/*
-		 * Any other variable is considered Private Authenticated Variable.
-		 * These are verified by db
-		 */
-		create_smm_variable(&(allowed_key_store_variables[0]),
-				    sizeof(EFI_IMAGE_SECURITY_DATABASE), maximum_variable_size,
-				    (uint8_t *)EFI_IMAGE_SECURITY_DATABASE,
-				    &security_database_guid);
 	}
 
 	return EFI_SUCCESS;
@@ -1084,12 +1092,40 @@ static efi_status_t verify_var_by_key_var(const efi_data_map *new_var,
 	return EFI_SECURITY_VIOLATION;
 }
 
-/* Basic verification of the authentication header of the new variable.
+static bool is_private_auth_var(SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var)
+{
+	if (compare_name_to_key_store_name(var->Name,
+					   var->NameSize, EFI_PLATFORM_KEY_NAME,
+					   sizeof(EFI_PLATFORM_KEY_NAME)) ||
+		 compare_name_to_key_store_name(
+			   var->Name, var->NameSize,
+			   EFI_KEY_EXCHANGE_KEY_NAME, sizeof(EFI_KEY_EXCHANGE_KEY_NAME)) ||
+		 compare_name_to_key_store_name(
+			 var->Name, var->NameSize,
+			 EFI_IMAGE_SECURITY_DATABASE, sizeof(EFI_IMAGE_SECURITY_DATABASE)) ||
+		 compare_name_to_key_store_name(
+			 var->Name, var->NameSize,
+			 EFI_IMAGE_SECURITY_DATABASE1, sizeof(EFI_IMAGE_SECURITY_DATABASE1)) ||
+		 compare_name_to_key_store_name(
+			 var->Name, var->NameSize,
+			 EFI_IMAGE_SECURITY_DATABASE2, sizeof(EFI_IMAGE_SECURITY_DATABASE2)) ||
+		 compare_name_to_key_store_name(
+			 var->Name, var->NameSize,
+			 EFI_IMAGE_SECURITY_DATABASE3, sizeof(EFI_IMAGE_SECURITY_DATABASE3)))
+		return false;
+
+	return true;
+}
+
+/*
+ * Basic verification of the authentication header of the new variable.
  * First finds the key variable responsible for the authentication of the new variable,
  * then verifies it.
  */
 static efi_status_t authenticate_variable(const struct uefi_variable_store *context,
 					  EFI_TIME *stored_timestamp,
+					  uint8_t (*fingerprint)[FINGERPRINT_SIZE],
+					  bool new_variable,
 					  SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var)
 {
 	efi_status_t status = EFI_SUCCESS;
@@ -1160,9 +1196,16 @@ static efi_status_t authenticate_variable(const struct uefi_variable_store *cont
 	if (!calc_variable_hash(&var_map, (uint8_t *)&hash_buffer, sizeof(hash_buffer), &hash_len))
 		return EFI_SECURITY_VIOLATION;
 
-	/* Run Secure Boot related authentication steps */
-	status = authenticate_secure_boot_variable(context, &var_map, (uint8_t*) &hash_buffer,
+	if (is_private_auth_var(var)) {
+		/* Run Private Authenticated Variable related authentication steps */
+		status = authenticate_private_variable(context, &var_map, hash_buffer,
+						       hash_len, variable_info.MaximumVariableSize,
+						       new_variable, fingerprint);
+	} else {
+		/* Run Secure Boot related authentication steps */
+		status = authenticate_secure_boot_variable(context, &var_map, hash_buffer,
 						   hash_len, variable_info.MaximumVariableSize);
+	}
 
 	/* Remove the authentication header from the variable if the authentication is successful */
 	if (status == EFI_SUCCESS) {
@@ -1317,6 +1360,55 @@ end:
 	}
 
 	return status;
+}
+
+static efi_status_t authenticate_private_variable(const struct uefi_variable_store *context,
+						  efi_data_map* var_map,
+						  uint8_t* hash_buffer,
+						  size_t hash_len,
+						  uint64_t max_variable_size,
+						  bool new_variable,
+						  uint8_t (*fingerprint)[FINGERPRINT_SIZE])
+{
+	uint8_t new_fingerprint[PSA_HASH_MAX_SIZE] = { 0 };
+
+	/* Verify the signature of the variable */
+	if (verify_pkcs7_signature(
+		var_map->efi_auth_descriptor->AuthInfo.CertData,
+		var_map->efi_auth_descriptor_certdata_len, hash_buffer,
+		hash_len, NULL, 0) != 0)
+		return EFI_SECURITY_VIOLATION;
+
+	/**
+	 * UEFI: Page 254
+	 * CN of the signing certificate’s Subject and the hash of the tbsCertificate of the
+	 * top-level issuer certificate (or the signing certificate itself if no other certificates
+	 * are present or the certificate chain is of length 1) in SignedData.certificates is
+	 * registered for use in subsequent verifications of this variable. Implementations
+	 * may store just a single hash of these two elements to reduce storage requirements.
+	 */
+	if (get_uefi_priv_auth_var_fingerprint_handler(var_map->efi_auth_descriptor->AuthInfo.CertData,
+						       var_map->efi_auth_descriptor_certdata_len,
+						       new_fingerprint)) {
+		EMSG("Failed to query variable fingerprint input");
+		return EFI_SECURITY_VIOLATION;
+	}
+
+	/*
+	 * The hash is SHA256 so only 32 bytes contain non zero values.
+	 * Use only that part to decrease metadata size.
+	 */
+	if (!new_variable) {
+		if (memcmp(&new_fingerprint, fingerprint, FINGERPRINT_SIZE)) {
+			EMSG("Fingerprint verification failed");
+			return EFI_SECURITY_VIOLATION;
+		}
+	} else {
+		/* Save fingerprint */
+		memcpy(fingerprint, &new_fingerprint, FINGERPRINT_SIZE);
+	}
+
+	return EFI_SUCCESS;
 }
 #endif
 
