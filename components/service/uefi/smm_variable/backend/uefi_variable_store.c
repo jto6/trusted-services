@@ -78,6 +78,12 @@ static efi_status_t verify_var_by_key_var(const efi_data_map *new_var,
 static efi_status_t authenticate_variable(const struct uefi_variable_store *context,
 					  EFI_TIME *stored_timestamp,
 					  SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *var);
+
+static efi_status_t authenticate_secure_boot_variable(const struct uefi_variable_store *context,
+						      efi_data_map* var_map,
+						      uint8_t* hash_buffer,
+						      size_t hash_len,
+						      uint64_t max_variable_size);
 #endif
 
 static efi_status_t store_variable_data(const struct uefi_variable_store *context,
@@ -225,7 +231,7 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			return EFI_OUT_OF_RESOURCES;
 	}
 
-	/* Save the timestamp into a buffer, which can be overwritten by the authentication function */
+	/* Save the timestamp into a buffer, which can be overwritten later */
 	memcpy(&stored_timestamp, &info->metadata.timestamp, sizeof(EFI_TIME));
 
 	/* Control access */
@@ -243,7 +249,8 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			if (info->metadata.attributes &
 			    EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 				status = authenticate_variable(
-					context, &stored_timestamp, (SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
+					context, &stored_timestamp,
+					(SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
 
 				if (status != EFI_SUCCESS)
 					return status;
@@ -329,7 +336,8 @@ efi_status_t uefi_variable_store_set_variable(const struct uefi_variable_store *
 			 */
 			if (var->Attributes & EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 				status = authenticate_variable(
-					context, &stored_timestamp, (SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
+					context, &stored_timestamp,
+					(SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *)var);
 
 				if (status != EFI_SUCCESS)
 					return status;
@@ -1086,94 +1094,19 @@ static efi_status_t authenticate_variable(const struct uefi_variable_store *cont
 {
 	efi_status_t status = EFI_SUCCESS;
 	EFI_GUID pkcs7_guid = EFI_CERT_TYPE_PKCS7_GUID;
-	EFI_GUID global_variable_guid = EFI_GLOBAL_VARIABLE;
-	EFI_GUID security_database_guid = EFI_IMAGE_SECURITY_DATABASE_GUID;
 	SMM_VARIABLE_COMMUNICATE_QUERY_VARIABLE_INFO variable_info = { 0, 0, 0, 0 };
-	SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *pk_variable = NULL;
-	size_t pk_payload_size = 0;
 	efi_data_map var_map = { NULL, NULL, NULL, 0, 0, NULL, 0, NULL };
 	uint8_t hash_buffer[PSA_HASH_MAX_SIZE];
 	size_t hash_len = 0;
-	bool hash_result = false;
 
 	/* Create a map of the fields of the new variable including the auth header */
 	if (!init_efi_data_map(var, true, &var_map))
 		return EFI_SECURITY_VIOLATION;
 
-	/* database variables can be verified by either PK or KEK while images
-	 * should be checked by db and dbx so the length of two will be enough.
-	 */
-	SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *allowed_key_store_variables[] = { NULL, NULL };
-
 	/* Find the maximal size of variables for the GetVariable operation */
 	status = uefi_variable_store_query_variable_info(context, &variable_info);
 	if (status != EFI_SUCCESS)
 		return EFI_SECURITY_VIOLATION;
-
-	/**
-	 * UEFI: Page 253
-	 * 3. If the variable SetupMode==1, and the variable is a secure
-	 * boot policy variable, then the firmware implementation shall
-	 * consider the checks in the following steps 4 and 5 to have
-	 * passed, and proceed with updating the variable value as
-	 * outlined below.
-	 *
-	 * While no Platform Key is enrolled, the SetupMode variable shall
-	 * be equal to 1. While SetupMode == 1, the platform firmware shall
-	 * not require authentication in order to modify the Platform Key,
-	 * Key Enrollment Key, OsRecoveryOrder, OsRecovery####,
-	 * and image security databases.
-	 *
-	 * After the Platform Key is enrolled, the SetupMode variable shall
-	 * be equal to 0. While SetupMode == 0, the platform firmware shall
-	 * require authentication in order to modify the Platform Key,
-	 * Key Enrollment Key, OsRecoveryOrder, OsRecovery####,
-	 * and image security databases
-	 *
-	 * NOTE: SetupMode variable is not supported yet, so the
-	 * Platform Key is checked to enable or disable authentication.
-	 */
-	create_smm_variable(&pk_variable, sizeof(EFI_PLATFORM_KEY_NAME),
-			    variable_info.MaximumVariableSize, (uint8_t *)EFI_PLATFORM_KEY_NAME,
-			    &global_variable_guid);
-
-	if (!pk_variable)
-		return EFI_OUT_OF_RESOURCES;
-
-	status = uefi_variable_store_get_variable(
-		context, pk_variable, variable_info.MaximumVariableSize, &pk_payload_size);
-
-	/* If PK does not exist authentication is disabled */
-	if (status != EFI_SUCCESS) {
-		free(pk_variable);
-		status = EFI_SUCCESS;
-		goto end;
-	}
-
-	/*
-	 * Get the size of the PK payload with the help of a variable map before freeing the object.
-	 * pk_var_map points to fields of pk_variable so this code part is in a separate code block
-	 * to eliminate the var map right after freeing pk_variable. This way we can avoid
-	 * unexpected access to freed memory area.
-	 */
-	{
-		efi_data_map pk_var_map;
-
-		/* Authentication header is not stored, so don't search for it! */
-		if (!init_efi_data_map(pk_variable, false, &pk_var_map)) {
-			free(pk_variable);
-			return EFI_SECURITY_VIOLATION;
-		}
-
-		pk_payload_size = pk_var_map.payload_len;
-		free(pk_variable);
-	}
-
-	/* If PK exists, but is empty the authentication is disabled */
-	if (pk_payload_size == 0) {
-		status = EFI_SUCCESS;
-		goto end;
-	}
 
 	/**
 	 * UEFI: Page 246
@@ -1224,16 +1157,121 @@ static efi_status_t authenticate_variable(const struct uefi_variable_store *cont
 	}
 
 	/* Calculate hash for the variable only once */
-	hash_result = calc_variable_hash(&var_map, (uint8_t *)&hash_buffer, sizeof(hash_buffer),
-					 &hash_len);
+	if (!calc_variable_hash(&var_map, (uint8_t *)&hash_buffer, sizeof(hash_buffer), &hash_len))
+		return EFI_SECURITY_VIOLATION;
 
-	if (!hash_result) {
-		status = EFI_SECURITY_VIOLATION;
+	/* Run Secure Boot related authentication steps */
+	status = authenticate_secure_boot_variable(context, &var_map, (uint8_t*) &hash_buffer,
+						   hash_len, variable_info.MaximumVariableSize);
+
+	/* Remove the authentication header from the variable if the authentication is successful */
+	if (status == EFI_SUCCESS) {
+		uint8_t *smm_payload =
+			(uint8_t *)var + SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_DATA_OFFSET(var);
+
+		memmove(smm_payload, var_map.payload, var_map.payload_len);
+		memset((uint8_t *)smm_payload + var_map.payload_len, 0,
+		       var_map.efi_auth_descriptor_len);
+
+		var->DataSize -= var_map.efi_auth_descriptor_len;
+	}
+
+	return status;
+}
+
+static efi_status_t authenticate_secure_boot_variable(const struct uefi_variable_store *context,
+						      efi_data_map* var_map,
+						      uint8_t* hash_buffer,
+						      size_t hash_len,
+						      uint64_t max_variable_size)
+{
+	efi_status_t status = EFI_SUCCESS;
+	EFI_GUID global_variable_guid = EFI_GLOBAL_VARIABLE;
+	EFI_GUID security_database_guid = EFI_IMAGE_SECURITY_DATABASE_GUID;
+	SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *pk_variable = NULL;
+	size_t pk_payload_size = 0;
+
+	/* database variables can be verified by either PK or KEK while images
+	 * should be checked by db and dbx so the length of two will be enough.
+	 */
+	SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE *allowed_key_store_variables[] = { NULL, NULL };
+
+	/**
+	 * UEFI: Page 253
+	 * 3. If the variable SetupMode==1, and the variable is a secure
+	 * boot policy variable, then the firmware implementation shall
+	 * consider the checks in the following steps 4 and 5 to have
+	 * passed, and proceed with updating the variable value as
+	 * outlined below.
+	 *
+	 * While no Platform Key is enrolled, the SetupMode variable shall
+	 * be equal to 1. While SetupMode == 1, the platform firmware shall
+	 * not require authentication in order to modify the Platform Key,
+	 * Key Enrollment Key, OsRecoveryOrder, OsRecovery####,
+	 * and image security databases.
+	 *
+	 * After the Platform Key is enrolled, the SetupMode variable shall
+	 * be equal to 0. While SetupMode == 0, the platform firmware shall
+	 * require authentication in order to modify the Platform Key,
+	 * Key Enrollment Key, OsRecoveryOrder, OsRecovery####,
+	 * and image security databases
+	 *
+	 * NOTE: SetupMode variable is not supported yet, so the
+	 * Platform Key is checked to enable or disable authentication.
+	 */
+	create_smm_variable(&pk_variable, sizeof(EFI_PLATFORM_KEY_NAME),
+			    max_variable_size, (uint8_t *)EFI_PLATFORM_KEY_NAME,
+			    &global_variable_guid);
+
+	if (!pk_variable)
+		return EFI_OUT_OF_RESOURCES;
+
+	status = uefi_variable_store_get_variable(
+		context, pk_variable, max_variable_size, &pk_payload_size);
+
+	/* If PK does not exist authentication is disabled */
+	switch (status)	{
+		case EFI_SUCCESS:
+			break;
+		case EFI_NOT_FOUND:
+			/* If PK does not exist authentication is disabled */
+			free(pk_variable);
+			status = EFI_SUCCESS;
+			goto end;
+		default:
+			EMSG("Failed to read PK");
+			free(pk_variable);
+			status = EFI_SECURITY_VIOLATION;
+			goto end;
+	}
+
+	/*
+	 * Get the size of the PK payload with the help of a variable map before freeing the object.
+	 * pk_var_map points to fields of pk_variable so this code part is in a separate code block
+	 * to eliminate the var map right after freeing pk_variable. This way we can avoid
+	 * unexpected access to freed memory area.
+	 */
+	{
+		efi_data_map pk_var_map;
+
+		/* Authentication header is not stored, so don't search for it! */
+		if (!init_efi_data_map(pk_variable, false, &pk_var_map)) {
+			free(pk_variable);
+			return EFI_SECURITY_VIOLATION;
+		}
+
+		pk_payload_size = pk_var_map.payload_len;
+		free(pk_variable);
+	}
+
+	/* If PK exists, but is empty the authentication is disabled */
+	if (pk_payload_size == 0) {
+		status = EFI_SUCCESS;
 		goto end;
 	}
 
-	status = select_verification_keys(var_map, global_variable_guid, security_database_guid,
-					  variable_info.MaximumVariableSize,
+	status = select_verification_keys(*var_map, global_variable_guid, security_database_guid,
+					  max_variable_size,
 					  &allowed_key_store_variables[0]);
 
 	if (status != EFI_SUCCESS)
@@ -1247,8 +1285,8 @@ static efi_status_t authenticate_variable(const struct uefi_variable_store *cont
 			continue;
 
 		status = uefi_variable_store_get_variable(context, allowed_key_store_variables[i],
-							  variable_info.MaximumVariableSize,
-							  &actual_variable_length);
+							max_variable_size,
+							&actual_variable_length);
 
 		if (status) {
 			/* When the parent does not exist it is considered verification failure */
@@ -1264,8 +1302,8 @@ static efi_status_t authenticate_variable(const struct uefi_variable_store *cont
 			goto end;
 		}
 
-		status = verify_var_by_key_var(&var_map, &allowed_key_store_var_map,
-					       (uint8_t *)&hash_buffer, hash_len);
+		status = verify_var_by_key_var(var_map, &allowed_key_store_var_map,
+					hash_buffer, hash_len);
 
 		if (status == EFI_SUCCESS)
 			goto end;
@@ -1276,18 +1314,6 @@ end:
 	for (int i = 0; i < ARRAY_SIZE(allowed_key_store_variables); i++) {
 		if (allowed_key_store_variables[i])
 			free(allowed_key_store_variables[i]);
-	}
-
-	/* Remove the authentication header from the variable if the authentication is successful */
-	if (status == EFI_SUCCESS) {
-		uint8_t *smm_payload =
-			(uint8_t *)var + SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_DATA_OFFSET(var);
-
-		memmove(smm_payload, var_map.payload, var_map.payload_len);
-		memset((uint8_t *)smm_payload + var_map.payload_len, 0,
-		       var_map.efi_auth_descriptor_len);
-
-		var->DataSize -= var_map.efi_auth_descriptor_len;
 	}
 
 	return status;
