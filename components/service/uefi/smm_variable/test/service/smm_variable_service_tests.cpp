@@ -9,6 +9,7 @@
 #include <cstring>
 #include <locale>
 #include <sstream>
+#include <limits>
 
 #include "util.h"
 
@@ -157,7 +158,7 @@ TEST_GROUP(SmmVariableServiceTests)
 #endif
 
 		do {
-			status = m_client->get_next_variable_name(guid, var_name);
+			status = m_client->get_next_variable_name(guid, var_name, max_variable_size);
 
 			/* There are no more variables in the persistent store */
 			if (status == EFI_NOT_FOUND) {
@@ -225,6 +226,8 @@ TEST_GROUP(SmmVariableServiceTests)
 	 */
 	std::u16string m_ro_variable = to_variable_name(u"ro_variable");
 	std::u16string m_boot_finished_var_name = to_variable_name(u"finished");
+
+	uint32_t max_variable_size = 4096;
 
 	/* Cleanup skips these variables */
 	std::vector<std::u16string *> m_non_rm_vars{ &m_ro_variable, &m_boot_finished_var_name };
@@ -657,7 +660,7 @@ TEST(SmmVariableServiceTests, enumerateStoreContents)
 	std::u16string *expected_variables[] = { &var_name_1, &var_name_2, &var_name_3 };
 
 	do {
-		efi_status = m_client->get_next_variable_name(guid, var_name);
+		efi_status = m_client->get_next_variable_name(guid, var_name, max_variable_size);
 		if (efi_status != EFI_SUCCESS)
 			break;
 

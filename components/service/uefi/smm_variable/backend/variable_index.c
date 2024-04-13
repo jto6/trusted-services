@@ -27,6 +27,9 @@ static uint64_t name_hash(const EFI_GUID *guid, size_t name_size, const int16_t 
 
 	/* Extend to cover name up to but not including null terminator */
 	for (size_t i = 0; i < (name_size - sizeof(int16_t)) / sizeof(int16_t); ++i) {
+		/* Only hash till the first null terminator */
+		if (name[i] == 0)
+			break;
 		hash = ((hash << 5) + hash) + name[i];
 	}
 

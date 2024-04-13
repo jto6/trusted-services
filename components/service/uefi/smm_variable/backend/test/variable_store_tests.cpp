@@ -501,15 +501,13 @@ TEST(UefiVariableStoreTests, bootServiceAccess)
 	std::vector<uint8_t> msg_buffer(VARIABLE_BUFFER_SIZE);
 	SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *next_name =
 		(SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *) msg_buffer.data();
-	size_t max_name_len =
-		VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 
 	size_t total_len = 0;
-	next_name->NameSize = sizeof(int16_t);
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	next_name->Name[0] = 0;
 
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 
 	UNSIGNED_LONGLONGS_EQUAL(EFI_NOT_FOUND, status);
 }
@@ -574,47 +572,48 @@ TEST(UefiVariableStoreTests, enumerateStoreContents)
 	std::vector<uint8_t> msg_buffer(VARIABLE_BUFFER_SIZE);
 	SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *next_name =
 		(SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *) msg_buffer.data();
-	size_t max_name_len =
-		VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 
 	/* First check handling of invalid variable name */
 	std::u16string bogus_name = to_variable_name(u"bogus_variable");
 	size_t bogus_name_size = string_get_size_in_bytes(bogus_name);
 	next_name->Guid = m_common_guid;
-	next_name->NameSize = bogus_name_size;
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	memcpy(next_name->Name, bogus_name.data(), bogus_name_size);
 
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_INVALID_PARAMETER, status);
 
 	/* Enumerate store contents */
 	next_name->NameSize = sizeof(int16_t);
 	next_name->Name[0] = 0;
-	/* Check if the correct NameSize is returned if max_name_len is too small */
+	/* Check if the correct NameSize is returned if namesize is too small */
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    0, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_BUFFER_TOO_SMALL, status);
 	UNSIGNED_LONGLONGS_EQUAL(sizeof(var_name_1), next_name->NameSize);
 
-	/* And then used the previously received next_name->NameSize as max_name_len */
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    next_name->NameSize, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_1, next_name->Name, next_name->NameSize));
 
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_2, next_name->Name, next_name->NameSize));
 
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_3, next_name->Name, next_name->NameSize));
 
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_NOT_FOUND, status);
 
 	power_cycle();
@@ -622,21 +621,23 @@ TEST(UefiVariableStoreTests, enumerateStoreContents)
 	/* Enumerate again - should be left with just NV variables.
 	 * Use a different but equally valid null name.
 	 */
-	next_name->NameSize = 10 * sizeof(int16_t);
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	memset(next_name->Name, 0, next_name->NameSize);
 
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_1, next_name->Name, next_name->NameSize));
 
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_3, next_name->Name, next_name->NameSize));
 
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_NOT_FOUND, status);
 }
 
@@ -672,21 +673,20 @@ TEST(UefiVariableStoreTests, failedNvSet)
 	std::vector<uint8_t> msg_buffer(VARIABLE_BUFFER_SIZE);
 	SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *next_name =
 		(SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *) msg_buffer.data();
-	size_t max_name_len =
-		VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 
 	/* Enumerate store contents */
 	size_t total_len = 0;
-	next_name->NameSize = sizeof(int16_t);
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	next_name->Name[0] = 0;
 
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_SUCCESS, status);
 	CHECK_TRUE(compare_variable_name(var_name_1, next_name->Name, next_name->NameSize));
 
+	next_name->NameSize = VARIABLE_BUFFER_SIZE - SMM_VARIABLE_COMMUNICATE_ACCESS_VARIABLE_NAME_OFFSET;
 	status = uefi_variable_store_get_next_variable_name(&m_uefi_variable_store, next_name,
-							    max_name_len, &total_len);
+							    &total_len);
 	UNSIGNED_LONGLONGS_EQUAL(EFI_NOT_FOUND, status);
 }
 

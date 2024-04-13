@@ -436,9 +436,27 @@ efi_status_t uefi_variable_store_get_variable(const struct uefi_variable_store *
 efi_status_t
 uefi_variable_store_get_next_variable_name(const struct uefi_variable_store *context,
 					   SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME *cur,
-					   size_t max_name_len, size_t *total_length)
+					   size_t *total_length)
 {
-	efi_status_t status = check_name_terminator(cur->Name, cur->NameSize);
+	efi_status_t status = EFI_SUCCESS;
+	size_t buffer_size = 0;
+
+	if (!cur)
+		return EFI_INVALID_PARAMETER;
+	/*
+	 * NameSize is set to the buffer size to store the names,
+	 * let's calculate the size actually being used.
+	 */
+	buffer_size = cur->NameSize;
+	for (int i = 0; i < buffer_size / sizeof(int16_t); i++) {
+		if (cur->Name[i] == 0) {
+			/* With null terminator */
+			cur->NameSize = 2*(i+1);
+			break;
+		}
+	}
+
+	status = check_name_terminator(cur->Name, cur->NameSize);
 
 	if (status != EFI_SUCCESS)
 		return status;
@@ -450,20 +468,10 @@ uefi_variable_store_get_next_variable_name(const struct uefi_variable_store *con
 			&context->variable_index, &cur->Guid, cur->NameSize, cur->Name, &status);
 
 		if (info && (status == EFI_SUCCESS)) {
-			/* The NameSize has to be set in every case according to the UEFI specs.
-			 * In case of EFI_BUFFER_TOO_SMALL it has to reflect the size of buffer
-			 * needed.
-			 */
-			cur->NameSize = info->metadata.name_size;
-			*total_length = sizeof(SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME);
-
-			if (info->metadata.name_size <= max_name_len) {
+			if (info->metadata.name_size <= buffer_size) {
 				cur->Guid = info->metadata.guid;
+				cur->NameSize = info->metadata.name_size;
 				memcpy(cur->Name, info->metadata.name, info->metadata.name_size);
-
-				*total_length =
-					SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME_TOTAL_SIZE(
-						cur);
 
 				/*
 				 * Check if variable is accessible (e.g boot variable is not
@@ -474,6 +482,10 @@ uefi_variable_store_get_next_variable_name(const struct uefi_variable_store *con
 				if (status == EFI_SUCCESS)
 					break;
 			} else {
+				/* The VariableNameSize is updated to reflect the size of buffer needed */
+				cur->NameSize = info->metadata.name_size;
+				memset(cur->Name, 0, buffer_size);
+				memset(&cur->Guid, 0, sizeof(EFI_GUID));
 				status = EFI_BUFFER_TOO_SMALL;
 				break;
 			}
@@ -482,18 +494,24 @@ uefi_variable_store_get_next_variable_name(const struct uefi_variable_store *con
 			/* Do not hide original error if there is any */
 			if (status == EFI_SUCCESS)
 				status = EFI_NOT_FOUND;
+
+			memset(cur->Name, 0, buffer_size);
+			memset(&cur->Guid, 0, sizeof(EFI_GUID));
+			cur->NameSize = 0;
 			break;
 		}
 	}
 
-	/* If we found no accessible variable clear the fields for security */
-	if (status != EFI_SUCCESS) {
-		memset(cur->Name, 0, max_name_len);
-		memset(&cur->Guid, 0, sizeof(EFI_GUID));
-		if (status != EFI_BUFFER_TOO_SMALL)
-			cur->NameSize = 0;
+	if (status == EFI_SUCCESS) {
+		/* Store everything including the name */
+		*total_length =
+			SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME_TOTAL_SIZE(
+				cur);
+	} else {
+		/* Do not store the name, only the size */
+		*total_length =
+			SMM_VARIABLE_COMMUNICATE_GET_NEXT_VARIABLE_NAME_NAME_OFFSET;
 	}
-
 	return status;
 }
 
