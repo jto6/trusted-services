@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Arm Limited
+ * Copyright (c) 2020-2024 Arm Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include "mhu_v2.h"
+#include <stddef.h>
+#include "mhu_v2_x.h"
 
 #define _MHU_V2_X_MAX_CHANNELS    124
 #define _MHU_V2_1_MAX_CHCOMB_INT  4
@@ -70,7 +71,7 @@ struct _mhu_v2_x_send_frame_t {
     volatile uint32_t reserved_0;
     /* Offset: 0xFA0 (R/W) Channel Combined Interrupt Stat (Reserved in 2.0) */
     volatile uint32_t ch_comb_int_st[_MHU_V2_1_MAX_CHCOMB_INT];
-    /* Offset: ‭0xFC4‬ (R/ ) Reserved */
+    /* Offset: 0xFC4 (R/ ) Reserved */
     volatile uint32_t reserved_1[6];
     /* Offset: 0xFC8 (R/ ) Implementer Identification Register */
     volatile uint32_t iidr;
@@ -142,7 +143,6 @@ union _mhu_v2_x_frame_t {
 enum mhu_v2_x_error_t mhu_v2_x_driver_init(struct mhu_v2_x_dev_t *dev,
      enum mhu_v2_x_supported_revisions rev)
 {
-    uint32_t AIDR = 0;
     union _mhu_v2_x_frame_t *p_mhu = (union _mhu_v2_x_frame_t *)dev->base;
 
     if (dev->is_initialized) {
@@ -150,6 +150,7 @@ enum mhu_v2_x_error_t mhu_v2_x_driver_init(struct mhu_v2_x_dev_t *dev,
     }
 
     if (rev == MHU_REV_READ_FROM_HW) {
+        uint32_t AIDR = 0;
         /* Read revision from HW */
         if (dev->frame == MHU_V2_X_RECEIVER_FRAME) {
             AIDR = p_mhu->recv_frame.aidr;
@@ -190,7 +191,12 @@ enum mhu_v2_x_error_t mhu_v2_x_driver_init(struct mhu_v2_x_dev_t *dev,
 
 uint32_t mhu_v2_x_get_num_channel_implemented(const struct mhu_v2_x_dev_t *dev)
 {
-    union _mhu_v2_x_frame_t *p_mhu = (union _mhu_v2_x_frame_t *)dev->base;
+    union _mhu_v2_x_frame_t *p_mhu = NULL;
+
+    if (!dev)
+        return MHU_V_2_X_ERR_GENERAL;
+
+    p_mhu = (union _mhu_v2_x_frame_t *)dev->base;
 
     if ( !(dev->is_initialized) ) {
         return MHU_V_2_X_ERR_NOT_INIT;
@@ -214,6 +220,23 @@ enum mhu_v2_x_error_t mhu_v2_x_channel_send(const struct mhu_v2_x_dev_t *dev,
 
     if(dev->frame == MHU_V2_X_SENDER_FRAME) {
         (SEND_FRAME(p_mhu))->send_ch_window[channel].ch_set = val;
+        return MHU_V_2_X_ERR_NONE;
+    } else {
+        return MHU_V_2_X_ERR_INVALID_ARG;
+    }
+}
+
+enum mhu_v2_x_error_t mhu_v2_x_channel_poll(const struct mhu_v2_x_dev_t *dev,
+     uint32_t channel, uint32_t *value)
+{
+    union _mhu_v2_x_frame_t *p_mhu = (union _mhu_v2_x_frame_t *)dev->base;
+
+    if ( !(dev->is_initialized) ) {
+        return MHU_V_2_X_ERR_NOT_INIT;
+    }
+
+    if (dev->frame == MHU_V2_X_SENDER_FRAME) {
+        *value = (SEND_FRAME(p_mhu))->send_ch_window[channel].ch_st;
         return MHU_V_2_X_ERR_NONE;
     } else {
         return MHU_V_2_X_ERR_INVALID_ARG;
@@ -591,10 +614,11 @@ enum mhu_v2_x_error_t mhu_v2_1_get_ch_interrupt_num(
         }
 
         for(j = 0; j < CH_PER_CH_COMB; j++) {
-            if ((status >> (CH_PER_CH_COMB - j - 1)) & (ENABLE)) {
-                *channel = (CH_PER_CH_COMB - j -1) + (i * CH_PER_CH_COMB);
+            if (status & ENABLE) {
+                *channel = (j + (i * CH_PER_CH_COMB));
                 return MHU_V_2_X_ERR_NONE;
             }
+            status >>= 1;
         }
     }
 

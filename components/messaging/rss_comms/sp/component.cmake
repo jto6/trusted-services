@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2024, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2024, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -9,13 +9,12 @@ if (NOT DEFINED TGT)
 endif()
 
 set_property(TARGET ${TGT} APPEND PROPERTY PUBLIC_HEADER
-	"${CMAKE_CURRENT_LIST_DIR}/openamp_messenger_api.h"
+	"${CMAKE_CURRENT_LIST_DIR}/rss_comms_messenger_api.h"
 	)
 
 target_sources(${TGT} PRIVATE
-	"${CMAKE_CURRENT_LIST_DIR}/openamp_messenger.c"
-	"${CMAKE_CURRENT_LIST_DIR}/openamp_virtio.c"
-	"${CMAKE_CURRENT_LIST_DIR}/openamp_mhu.c"
+	"${CMAKE_CURRENT_LIST_DIR}/rss_comms_messenger.c"
+	"${CMAKE_CURRENT_LIST_DIR}/rss_comms_platform.c"
 	)
 
 target_include_directories(${TGT}
