@@ -23,8 +23,13 @@ private:
 	void do_init();
 	void do_deinit();
 
+	void open_crypto_session();
+	void close_crypto_session();
+
 	struct block_storage_provider m_block_storage_provider;
 	struct block_store *m_block_store;
+	struct service_context *m_crypto_service_context;
+	struct rpc_caller_session *m_crypto_session;
 };
 
 #endif /* STANDALONE_BLOCK_STORAGE_SERVICE_CONTEXT_H */

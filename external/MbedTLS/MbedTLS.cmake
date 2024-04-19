@@ -7,7 +7,7 @@
 
 set(MBEDTLS_URL "https://github.com/Mbed-TLS/mbedtls.git"
 		CACHE STRING "Mbed TLS repository URL")
-set(MBEDTLS_REFSPEC "mbedtls-3.4.0"
+set(MBEDTLS_REFSPEC "mbedtls-3.5.1"
 		CACHE STRING "Mbed TLS git refspec")
 set(MBEDTLS_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/mbedtls-src"
 		CACHE PATH "MbedTLS source directory")
@@ -30,7 +30,7 @@ set(GIT_OPTIONS
 	PATCH_COMMAND
 		git stash
 		COMMAND git branch -f bf-am
-		COMMAND git am ${CMAKE_CURRENT_LIST_DIR}/0001-Add-capability-to-build-libmbedcrypto-only.patch
+		COMMAND git am ${CMAKE_CURRENT_LIST_DIR}/0001-Add-capability-to-selectively-build-libraries.patch
 		COMMAND git reset bf-am
 		COMMAND ${Python3_EXECUTABLE} scripts/config.py crypto
 )
@@ -66,6 +66,9 @@ if(TARGET stdlib::c)
 	unset(_mbedtls_tgt)
 endif()
 
-# Advertise Mbed TLS as the provider of the PSA Crypto API
-set(PSA_CRYPTO_API_INCLUDE "${MBEDTLS_INSTALL_DIR}/include"
-		CACHE STRING "PSA Crypto API include path")
+# Advertise Mbed TLS provided psa crypto api header file.  Can be used with #include MBEDTLS_PSA_CRYPTO_H
+# when it is necessary to explicitly include the mbedtls provided version of psa/crypto.h.
+add_compile_definitions(MBEDTLS_PSA_CRYPTO_H="${MBEDTLS_INSTALL_DIR}/include/psa/crypto.h")
+
+# Advertise the public interface path to allow a deployment to determine what scope to give it
+set(MBEDTLS_PUBLIC_INCLUDE_PATH "${MBEDTLS_INSTALL_DIR}/include" CACHE STRING "Mbedtls public include path")

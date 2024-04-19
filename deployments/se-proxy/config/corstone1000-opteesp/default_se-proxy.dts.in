@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2023-2024, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -15,6 +15,7 @@
 	exception-level = <1>; /* S-EL0 */
 	execution-state = <0>; /* AArch64 */
 	xlat-granule = <0>; /* 4KiB */
+	boot-order = /bits/ 16 <@EXPORT_SP_BOOT_ORDER@>;
 	messaging-method = <3>; /* Direct messaging only */
 	ns-interrupts-action = <2>; /* Non-secure interrupts are signaled */
 	elf-format = <1>;
@@ -31,12 +32,6 @@
 			/* Armv8 A Foundation Platform values */
 			base-address = <0x00000000 0x1b830000>;
 			pages-count = <16>;
-			attributes = <0x3>; /* read-write */
-		};
-		openamp-virtio {
-			/* Armv8 A Foundation Platform values */
-			base-address = <0x00000000 0x88000000>;
-			pages-count = <256>;
 			attributes = <0x3>; /* read-write */
 		};
 	};

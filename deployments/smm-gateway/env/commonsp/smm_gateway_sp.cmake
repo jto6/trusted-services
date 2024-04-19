@@ -26,7 +26,9 @@ add_components(TARGET "smm-gateway"
 		"components/rpc/mm_communicate/endpoint/sp"
 		"components/service/locator/sp"
 		"components/service/locator/sp/ffa"
-		"components/service/smm_variable/frontend/mm_communicate"
+		"components/service/log/factory"
+		"components/service/log/client"
+		"components/service/uefi/smm_variable/frontend/mm_communicate"
 )
 
 target_sources(smm-gateway PRIVATE

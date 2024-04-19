@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2022, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
 #-------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+set(TS_PLATFORM "arm/fvp/fvp_base_revc-2xaemv8a" CACHE STRING "Target platform location.")
 include(../../../deployment.cmake REQUIRED)
 
 #-------------------------------------------------------------------------------
@@ -25,6 +26,13 @@ set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 set(TRACE_PREFIX "PS" CACHE STRING "Trace prefix")
 set(SP_STACK_SIZE "64 * 1024" CACHE STRING "Stack size")
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "Heap size")
+set(SP_BOOT_ORDER "3" CACHE STRING "Boot order of the SP")
+
+#-------------------------------------------------------------------------------
+#  Set target platform to provide drivers needed by the deployment
+#
+#-------------------------------------------------------------------------------
+add_platform(TARGET "protected-storage")
 
 #-------------------------------------------------------------------------------
 #  Add components - this deployment uses an infrastructure that provides
@@ -78,6 +86,7 @@ include(${TS_ROOT}/tools/cmake/common/ExportSp.cmake REQUIRED)
 export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME ${SP_NAME}
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_${SP_NAME}.dts.in
 	DTS_MEM_REGIONS ${SP_BIN_UUID_CANON}_memory_regions.dtsi

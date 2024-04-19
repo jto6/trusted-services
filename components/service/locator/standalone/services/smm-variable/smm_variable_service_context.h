@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2021-2022, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <service/locator/standalone/standalone_service_context.h>
-#include <service/smm_variable/provider/smm_variable_provider.h>
+#include <service/uefi/smm_variable/provider/smm_variable_provider.h>
 #include <service/secure_storage/backend/secure_storage_client/secure_storage_client.h>
 #include <service/secure_storage/backend/mock_store/mock_store.h>
 
@@ -34,7 +34,9 @@ private:
 	struct secure_storage_client m_persistent_store_client;
 	struct mock_store m_volatile_store;
 	struct service_context *m_storage_service_context;
+	struct service_context *m_crypto_service_context;
 	struct rpc_caller_session *m_storage_session;
+	struct rpc_caller_session *m_crypto_session;
 };
 
 #endif /* STANDALONE_SMM_VARIABLE_SERVICE_CONTEXT_H */

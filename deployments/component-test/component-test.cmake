@@ -64,6 +64,7 @@ add_components(
 		"components/service/locator/standalone/services/attestation"
 		"components/service/locator/standalone/services/block-storage"
 		"components/service/locator/standalone/services/fwu"
+		"components/service/locator/standalone/services/rpmb"
 		"components/service/locator/standalone/services/smm-variable"
 		"components/service/attestation/include"
 		"components/service/attestation/claims"
@@ -91,6 +92,7 @@ add_components(
 		"components/service/block_storage/block_store/device/null"
 		"components/service/block_storage/block_store/device/file"
 		"components/service/block_storage/block_store/device/file/test"
+		"components/service/block_storage/block_store/device/rpmb"
 		"components/service/block_storage/block_store/client"
 		"components/service/block_storage/block_store/partitioned"
 		"components/service/block_storage/block_store/partitioned/test"
@@ -101,6 +103,7 @@ add_components(
 		"components/service/block_storage/factory/ref_ram"
 		"components/service/block_storage/factory/ref_ram_gpt"
 		"components/service/block_storage/factory/client"
+		"components/service/block_storage/factory/rpmb"
 		"components/service/fwu/agent"
 		"components/service/fwu/fw_store/banked"
 		"components/service/fwu/fw_store/banked/metadata_serializer/v1"
@@ -125,11 +128,11 @@ add_components(
 		"components/service/fwu/test/metadata_fetcher/volume"
 		"components/service/fwu/test/image_directory_checker"
 		"components/service/fwu/test/ref_scenarios"
+		"components/service/crypto/include"
+		"components/service/crypto/client/psa"
 		"components/service/crypto/client/cpp"
 		"components/service/crypto/client/cpp/protocol/protobuf"
 		"components/service/crypto/client/cpp/protocol/packed-c"
-		"components/service/crypto/client/test"
-		"components/service/crypto/client/test/standalone"
 		"components/service/crypto/provider"
 		"components/service/crypto/provider/serializer/protobuf"
 		"components/service/crypto/provider/serializer/packed-c"
@@ -159,6 +162,18 @@ add_components(
 		"components/service/crypto/test/service/extension/key_derivation"
 		"components/service/crypto/test/service/extension/key_derivation/packed-c"
 		"components/service/crypto/test/protocol"
+		"components/service/crypto/test/security/standalone"
+		"components/service/rpmb/backend"
+		"components/service/rpmb/backend/emulated"
+		"components/service/rpmb/backend/mock"
+		"components/service/rpmb/backend/mock/test"
+		"components/service/rpmb/client"
+		"components/service/rpmb/frontend"
+		"components/service/rpmb/frontend/platform/default"
+		"components/service/rpmb/frontend/platform/mock"
+		"components/service/rpmb/frontend/platform/mock/test"
+		"components/service/rpmb/frontend/test"
+		"components/service/rpmb/provider"
 		"components/service/secure_storage/include"
 		"components/service/secure_storage/frontend/psa/its"
 		"components/service/secure_storage/frontend/psa/its/test"
@@ -179,9 +194,9 @@ add_components(
 		"components/service/test_runner/provider"
 		"components/service/test_runner/provider/serializer/packed-c"
 		"components/service/test_runner/provider/backend/null"
-		"components/service/smm_variable/provider"
-		"components/service/smm_variable/backend"
-		"components/service/smm_variable/backend/test"
+		"components/service/uefi/smm_variable/provider"
+		"components/service/uefi/smm_variable/backend"
+		"components/service/uefi/smm_variable/backend/test"
 		"components/media/disk"
 		"components/media/disk/disk_images"
 		"components/media/disk/formatter"
@@ -218,9 +233,17 @@ include(${TS_ROOT}/external/nanopb/nanopb.cmake)
 target_link_libraries(component-test PRIVATE nanopb::protobuf-nanopb-static)
 protobuf_generate_all(TGT "component-test" NAMESPACE "protobuf" BASE_DIR "${TS_ROOT}/protocols")
 
-# Mbed TLS provides libmbedcrypto
+# MbedTLS
+set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/libmbedx509.h"
+	CACHE STRING "Configuration file for Mbed TLS" FORCE)
 include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(component-test PRIVATE MbedTLS::mbedcrypto)
+target_link_libraries(component-test PRIVATE MbedTLS::mbedx509)
+
+# Pass the location of the mbedtls config file to C preprocessor.
+target_compile_definitions(component-test PRIVATE
+		MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}"
+)
 
 # Qcbor
 include(${TS_ROOT}/external/qcbor/qcbor.cmake)

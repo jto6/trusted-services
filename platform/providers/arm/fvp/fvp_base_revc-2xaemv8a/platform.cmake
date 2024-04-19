@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2022, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2021-2023, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -12,6 +12,8 @@ endif()
 get_property(_platform_driver_dependencies TARGET ${TGT}
 	PROPERTY TS_PLATFORM_DRIVER_DEPENDENCIES
 )
+
+set(CFG_SFS_FLASH_AREA_SIZE "32*1024" CACHE STRING "Size of SFS ram store")
 
 #-------------------------------------------------------------------------------
 #  Map platform dependencies to suitable drivers for this platform
@@ -27,4 +29,8 @@ endif()
 
 if ("semihosting" IN_LIST _platform_driver_dependencies)
 	include(${TS_ROOT}/platform/drivers/tf-a/lib/semihosting/driver.cmake)
+endif()
+
+if ("uart" IN_LIST _platform_driver_dependencies)
+        include(${TS_ROOT}/platform/drivers/arm/uart/driver.cmake)
 endif()

@@ -29,6 +29,13 @@ include(${TS_ROOT}/external/tf_a/tf-a.cmake)
 add_tfa_dependency(TARGET "ts")
 
 #-------------------------------------------------------------------------------
+# Options and variables
+#-------------------------------------------------------------------------------
+target_compile_definitions(ts PRIVATE
+	-DUEFI_AUTH_VAR
+)
+
+#-------------------------------------------------------------------------------
 #  Define public interfaces for library
 #
 #-------------------------------------------------------------------------------
@@ -38,6 +45,9 @@ add_tfa_dependency(TARGET "ts")
 target_compile_definitions(ts PRIVATE
 	EXPORT_PUBLIC_INTERFACE_FWU_SERVICE_CONTEXT
 )
+
+# Enable RPMB authentication key write for host tests
+set(RPMB_WRITE_KEY TRUE CACHE BOOL "Enable RPMB Authentication Key Write")
 
 #-------------------------------------------------------------------------------
 #  Components that are specific to deployment in the linux-pc environment.
@@ -68,6 +78,7 @@ add_components(
 		"components/service/locator/standalone/services/attestation"
 		"components/service/locator/standalone/services/block-storage"
 		"components/service/locator/standalone/services/fwu"
+		"components/service/locator/standalone/services/rpmb"
 		"components/service/locator/standalone/services/smm-variable"
 		"components/service/attestation/include"
 		"components/service/attestation/claims"
@@ -82,9 +93,12 @@ add_components(
 		"components/service/attestation/key_mngr/local"
 		"components/service/attestation/provider"
 		"components/service/attestation/provider/serializer/packed-c"
+		"components/service/crypto/include"
+		"components/service/crypto/client/psa"
 		"components/service/block_storage/block_store"
 		"components/service/block_storage/block_store/device"
 		"components/service/block_storage/block_store/device/ram"
+		"components/service/block_storage/block_store/device/rpmb"
 		"components/service/block_storage/block_store/partitioned"
 		"components/service/block_storage/block_store/client"
 		"components/service/block_storage/provider"
@@ -93,6 +107,7 @@ add_components(
 		"components/service/block_storage/config/ref"
 		"components/service/block_storage/factory/ref_ram_gpt"
 		"components/service/block_storage/factory/client"
+		"components/service/block_storage/factory/rpmb"
 		"components/service/crypto/provider"
 		"components/service/crypto/provider/serializer/protobuf"
 		"components/service/crypto/provider/serializer/packed-c"
@@ -109,6 +124,12 @@ add_components(
 		"components/service/crypto/factory/full"
 		"components/service/crypto/backend/mbedcrypto"
 		"components/service/crypto/backend/mbedcrypto/trng_adapter/linux"
+		"components/service/rpmb/backend"
+		"components/service/rpmb/backend/emulated"
+		"components/service/rpmb/client"
+		"components/service/rpmb/frontend"
+		"components/service/rpmb/frontend/platform/default"
+		"components/service/rpmb/provider"
 		"components/service/secure_storage/include"
 		"components/service/secure_storage/frontend/psa/its"
 		"components/service/secure_storage/frontend/secure_storage_provider"
@@ -123,8 +144,8 @@ add_components(
 		"components/service/test_runner/provider/serializer/packed-c"
 		"components/service/test_runner/provider/backend/mock"
 		"components/service/test_runner/provider/backend/simple_c"
-		"components/service/smm_variable/backend"
-		"components/service/smm_variable/provider"
+		"components/service/uefi/smm_variable/backend"
+		"components/service/uefi/smm_variable/provider"
 		"components/media/disk"
 		"components/media/disk/disk_images"
 		"components/media/disk/formatter"
@@ -163,9 +184,17 @@ include(${TS_ROOT}/external/nanopb/nanopb.cmake)
 target_link_libraries(ts PRIVATE nanopb::protobuf-nanopb-static)
 protobuf_generate_all(TGT "ts" NAMESPACE "protobuf" BASE_DIR "${TS_ROOT}/protocols")
 
-# Mbed TLS provides libmbedcrypto
+# MbedTLS
+set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/libmbedx509.h"
+	CACHE STRING "Configuration file for Mbed TLS" FORCE)
 include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(ts PRIVATE MbedTLS::mbedcrypto)
+target_link_libraries(ts PRIVATE MbedTLS::mbedx509)
+
+# Pass the location of the mbedtls config file to C preprocessor.
+target_compile_definitions(ts PRIVATE
+		MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}"
+)
 
 # Qcbor
 include(${TS_ROOT}/external/qcbor/qcbor.cmake)
@@ -203,6 +232,8 @@ add_components(
 		"components/service/crypto/test/service"
 		"components/service/crypto/test/service/protobuf"
 		"components/service/crypto/test/service/packed-c"
+		"components/service/crypto/include"
+		"components/service/crypto/client/psa"
 		"components/service/crypto/client/cpp"
 		"components/service/crypto/client/cpp/protocol/protobuf"
 		"components/service/crypto/client/cpp/protocol/packed-c"

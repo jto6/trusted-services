@@ -11,6 +11,7 @@ Services
     secure-storage-service-description
     block-storage-service-description
     uefi-smm-services
+    logging-service-description
 
 --------------
 

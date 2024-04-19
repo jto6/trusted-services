@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -10,17 +10,14 @@ NanoPB integration for cmake
 ----------------------------
 
 This module will:
-	- download nanopb if not available locally
-	- build the runtime static library and the generator
-	- import the static library to the build
-	- define a function to provide access to the generator
+	- use LazyFetch to download nanopb and build the static library and the generator.
+	  Usual LazyFetch configuration to use prefetched source or prebuilt binaries apply.
+	- run find_module() to import the static library
+	- run find_executable() import the generator to the build (extend PYTHONPATH) and
+	  define a cmake function to provide access to the generator to build nanopb files.
 
-Note: the python module created by the generator build will be installed under
-Python_SITELIB ("Third-party platform independent installation directory.")
-This means the build may alter the state of your system. Please use virtualenv.
-
-Note: see requirements.txt for dependencies which need to be installed before
-running this module.
+Note: see requirements.txt for dependencies which need to be installed in the build
+environment to use this module.
 
 #]===]
 
@@ -28,7 +25,7 @@ running this module.
 
 set(NANOPB_URL "https://github.com/nanopb/nanopb.git"
 		CACHE STRING "nanopb repository URL")
-set(NANOPB_REFSPEC "nanopb-0.4.2"
+set(NANOPB_REFSPEC "nanopb-0.4.8"
 		CACHE STRING "nanopb git refspec")
 set(NANOPB_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/nanopb-src"
 		CACHE PATH "nanopb source-code")
@@ -49,7 +46,7 @@ set(GIT_OPTIONS
 	GIT_SHALLOW FALSE
 	#See the .patch file for details on why it is needed.
 	PATCH_COMMAND git stash
-		COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/fix-pyhon-name.patch
+		COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/0001-Fix-race-condition-in-directory-creation.patch
   )
 
 # Only pass libc settings to nanopb if needed. For environments where the standard
@@ -65,6 +62,11 @@ if(TARGET stdlib::c)
 	unset_saved_properties(LIBC)
 endif()
 
+# Nanopb build depends on python. Discover python here and pass the result to
+# nanopb build through the initial cache file.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+# Use LazyFetch to manage the external dependency.
 include(${TS_ROOT}/tools/cmake/common/LazyFetch.cmake REQUIRED)
 LazyFetch_MakeAvailable(DEP_NAME nanopb
 	FETCH_OPTIONS ${GIT_OPTIONS}
@@ -80,12 +82,9 @@ if(TARGET stdlib::c)
 endif()
 
 #### Build access to the protobuf compiler
-#TODO: verify protoc dependencies: python3-protobuf
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-find_file(NANOPB_GENERATOR_PATH
+find_program(NANOPB_GENERATOR_PATH
 			NAMES nanopb_generator.py
-			PATHS ${nanopb_SOURCE_DIR}/generator
+			HINTS ${NANOPB_INSTALL_DIR}/bin ${NANOPB_INSTALL_DIR}/sbin
 			DOC "nanopb protobuf compiler"
 			NO_DEFAULT_PATH
 		)
@@ -178,7 +177,7 @@ function(protobuf_generate)
 							DEPENDS "${_nanopb_fake_file}")
 		#Add a custom command to the target to create output directory.
 		add_custom_command(OUTPUT "${_nanopb_fake_file}"
-			COMMAND ${CMAKE_COMMAND} -E make_directory ${_OUT_DIR_BASE}
+			COMMAND ${CMAKE_COMMAND} -E make_directory ${_OUT_DIR_BASE}/${_OUT_DIR_REL}
 			COMMENT "Generating source from protobuf definitions for target ${PARAMS_TGT}")
 		#Ensure protobuf build happens before test target.
 		add_dependencies(${PARAMS_TGT} ${_nanopb_target})
@@ -186,11 +185,10 @@ function(protobuf_generate)
 		target_include_directories(${PARAMS_TGT} PRIVATE ${_OUT_DIR_BASE})
 	endif()
 
-	get_filename_component(NANOPB_GENERATOR_DIR "${NANOPB_GENERATOR_PATH}" DIRECTORY CACHE "Location of nanopb generator.")
 	#Append a protobuf generator command to the nanopb_generate target.
 	add_custom_command(OUTPUT "${_OUT_C}" "${_OUT_H}"
 					   COMMAND
-					   ${CMAKE_COMMAND} -E env PYTHONPATH=${NANOPB_GENERATOR_DIR}
+					   ${CMAKE_COMMAND} -E env PYTHONPATH=${NANOPB_INSTALL_DIR}/lib/python
 					   ${Python3_EXECUTABLE} ${NANOPB_GENERATOR_PATH}
 						  -I ${PARAMS_BASE_DIR}
 						  -D ${_OUT_DIR_BASE}

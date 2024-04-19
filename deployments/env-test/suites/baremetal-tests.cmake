@@ -27,6 +27,9 @@ add_components(TARGET "env-test"
 		"components/service/block_storage/block_store/device"
 		"components/service/block_storage/block_store/device/semihosting"
 		"components/service/block_storage/block_store/device/semihosting/test"
+		"components/service/log/backend/uart"
+		"components/service/log/backend/uart/uart_adapter/platform"
+		"components/service/log/backend/uart/uart_adapter/test"
 )
 
 target_sources(env-test PRIVATE
@@ -39,8 +42,16 @@ target_sources(env-test PRIVATE
 #-------------------------------------------------------------------------------
 
 # Mbed TLS provides libmbedcrypto
+set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/libmbed_only.h"
+	CACHE STRING "Configuration file for Mbed TLS" FORCE)
 include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(env-test PRIVATE MbedTLS::mbedcrypto)
+
+# Provide the config path to mbedtls
+target_compile_definitions(env-test
+	PRIVATE
+		MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}"
+)
 
 #-------------------------------------------------------------------------------
 #  This test suite depends on platform specific drivers

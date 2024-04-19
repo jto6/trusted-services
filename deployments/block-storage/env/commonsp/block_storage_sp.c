@@ -11,6 +11,7 @@
 #include "service/block_storage/provider/block_storage_provider.h"
 #include "service/block_storage/provider/serializer/packed-c/packedc_block_storage_serializer.h"
 #include "service/block_storage/factory/block_store_factory.h"
+#include "service/log/factory/log_factory.h"
 #include "sp_api.h"
 #include "sp_discovery.h"
 #include "sp_messaging.h"
@@ -120,6 +121,13 @@ static bool sp_init(uint16_t *own_id)
 	if (sp_res != SP_RESULT_OK) {
 		EMSG("Failed to map RXTX buffers: %d", sp_res);
 		return false;
+	}
+
+	IMSG("Start discovering logging service");
+	if (log_factory_create()) {
+		IMSG("Logging service discovery successful");
+	} else {
+		EMSG("Logging service discovery failed, falling back to console log");
 	}
 
 	sp_res = sp_discovery_own_id_get(own_id);

@@ -12,6 +12,8 @@
 #error TRACE_PREFIX must be defined
 #endif /* TRACE_PREFIX */
 
+void (*trace_puts_interface)(const char *str) = &trace_puts;
+
 void trace_printf(const char *func, int line, int level, const char *fmt, ...)
 {
 	char buffer[256];
@@ -42,6 +44,6 @@ void trace_printf(const char *func, int line, int level, const char *fmt, ...)
 		buffer[sizeof(buffer) - 1] = '\0';
 	}
 
-	trace_puts(buffer);
+	(*trace_puts_interface)(buffer);
 }
 #endif

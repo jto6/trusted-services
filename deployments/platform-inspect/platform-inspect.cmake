@@ -43,14 +43,14 @@ add_components(
 #
 #-------------------------------------------------------------------------------
 
-# Configuration for mbedcrypto
-set(MBEDTLS_USER_CONFIG_FILE
-	"${TS_ROOT}/components/service/crypto/client/cpp/config_mbedtls_user.h"
+# MbedTLS provides libmbedcrypto
+set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/crypto_posix.h"
 	CACHE STRING "Configuration file for mbedcrypto")
-
-# Mbed TLS provides libmbedcrypto
-include(../../../external/MbedTLS/MbedTLS.cmake)
+include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(platform-inspect PRIVATE MbedTLS::mbedcrypto)
+
+# Use Mbed TLS to provide the psa crypto api interface files
+set(PSA_CRYPTO_API_INCLUDE "${MBEDTLS_PUBLIC_INCLUDE_PATH}")
 
 # Qcbor
 include(${TS_ROOT}/external/qcbor/qcbor.cmake)

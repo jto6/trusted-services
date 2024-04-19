@@ -28,6 +28,7 @@
 		}								\
 	} while (0)
 
+extern void (*trace_puts_interface)(const char *str);
 void trace_puts(const char *str);
 void trace_printf(const char *func, int line, int level, const char *fmt, ...) __printf(4, 5);
 

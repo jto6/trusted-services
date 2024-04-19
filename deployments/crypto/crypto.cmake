@@ -12,6 +12,7 @@ add_components(TARGET "crypto"
 		"components/rpc/common/interface"
 		"components/rpc/common/endpoint"
 		"components/service/common/include"
+		"components/service/common/client"
 		"components/service/common/serializer/protobuf"
 		"components/service/common/provider"
 		"components/service/crypto/provider"
@@ -29,6 +30,7 @@ add_components(TARGET "crypto"
 		"components/service/crypto/provider/extension/aead/serializer/packed-c"
 		"components/service/crypto/factory/full"
 		"components/service/crypto/backend/mbedcrypto"
+		"components/service/crypto/backend/mbedcrypto/mbedtls_fake_x509"
 		"protocols/rpc/common/packed-c"
 		"protocols/service/crypto/protobuf"
 )
@@ -44,8 +46,17 @@ target_link_libraries(crypto PRIVATE nanopb::protobuf-nanopb-static)
 protobuf_generate_all(TGT "crypto" NAMESPACE "protobuf" BASE_DIR "${TS_ROOT}/protocols")
 
 # Mbed TLS provides libmbedcrypto
+set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/libmbedx509.h"
+	CACHE STRING "Configuration file for Mbed TLS" FORCE)
 include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(crypto PRIVATE MbedTLS::mbedcrypto)
+target_link_libraries(crypto PRIVATE MbedTLS::mbedx509)
+
+# Provide the config path to mbedtls
+target_compile_definitions(crypto
+	PRIVATE
+		MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}"
+)
 
 #################################################################
 

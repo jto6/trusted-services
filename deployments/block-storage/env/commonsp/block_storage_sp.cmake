@@ -25,6 +25,9 @@ add_components(TARGET "block-storage"
 		"components/rpc/common/endpoint"
 		"components/rpc/ts_rpc/common"
 		"components/rpc/ts_rpc/endpoint/sp"
+		"components/rpc/ts_rpc/caller/sp"
+		"components/service/log/factory"
+		"components/service/log/client"
 )
 
 target_sources(block-storage PRIVATE

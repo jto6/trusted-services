@@ -4,6 +4,60 @@ Change Log & Release Notes
 This document contains a summary of the new features, changes, fixes and known issues in each release of Trusted
 Services.
 
+Version <next>
+--------------
+
+- Trustedfirmware.org has deprecated Phabricator, the wiki and issue tracking provider. This functionality has been
+  moved to GitHub. See the `Trusted Services organization`_. The project wiki has been moved
+  `to here <https://github.com/Trusted-Services/trusted-services/wiki>`_
+
+
+Feature Highlights
+^^^^^^^^^^^^^^^^^^
+
+- Add documentation covering the :ref:`OP-TEE SPMC tests`.
+- Extend the :ref:`UEFI SMM Services` to support Authenticated Variables.
+- Introduce a work in progress RPMB implementation and integrate it to the Block Storage service. The current
+  configuration uses an SWd RAM buffer for data storage, and is not connected to the RPMB provider running in the NWd.
+  This is the first baseline to implement a scenario where the RPMB owner is an S-EL0 SP.
+- Introduce the :ref:`Logging Service`.
+- Add crypto key store partitioning support to the Crypto Service. This feature allows isolating clients running in
+  different SPs.
+- Add the "RSS Com" protocol. RSS Com is a new protocol used between secure partitions and security subsystems like the
+  Secure Enclave on Corstone-1000 or RSS on Kronos.
+
+
+Deprecations
+^^^^^^^^^^^^
+
+- This OpenAMP based psa_ipc implementation is deprecated and will be removed in the future.
+
+
+Updated external components
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- MbedTLS version int the Crypto service is updated to v3.5.1.
+- NanoPB has been upgraded to v0.4.8.
+
+Breaking changes
+^^^^^^^^^^^^^^^^
+
+
+Resolved issues
+^^^^^^^^^^^^^^^
+
+- Fix psa-ps-api-test test case 414.
+- Crypto key store partitioning has been implemented, and clients accessing the crypto service from different FF-A
+  endpoints can not access each other's assets anymore.
+
+Known limitations
+^^^^^^^^^^^^^^^^^
+
+- UEFI private variable authentication is not implemented in an UEFI compliant way. Currently such variables are
+  authenticated by the certificates stored on the `DB` variable which is incorrect. Instead an implementation defined
+  variable should be used to store the needed certificates. The plan is to follow ``EDK2`` use ``certdb`` and
+  ``certdbv`` variables for this purpose.
+
 Version 1.0.0
 -------------
 
@@ -142,7 +196,7 @@ Known limitations:
 Test Report
 ^^^^^^^^^^^
 
-Please find the Test Report covering this release in the `tf.org wiki`_.
+Please find the Test Report covering this release in the `project wiki`_.
 
 
 --------------
@@ -151,13 +205,15 @@ Please find the Test Report covering this release in the `tf.org wiki`_.
 .. _`Psacertified v1.0 APIs`: https://www.psacertified.org/development-resources/building-in-security/specifications-implementations/
 .. _`OP-TEE v3.19`: https://github.com/OP-TEE/optee_os/tree/3.19.0
 .. _`Yocto meta-arm` : https://gitlab.oss.arm.com/engineering/yocto/meta-arm/-/tree/master/meta-arm/recipes-security/trusted-services
-.. _`tf.org wiki`: https://developer.trustedfirmware.org/w/trusted-services/test-reports/v1.0.0-beta/
+.. _`project wiki`: https://github.com/Trusted-Services/trusted-services/wiki/Trusted-Services-test-reports
 .. _`AEM FVP`: https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
 .. _`PSA API certification tests`: https://github.com/ARM-software/psa-arch-tests
 .. _`OP-TEE git repo documentation`: https://optee.readthedocs.io/en/latest/building/gits/build.html
 .. _`Corstone-1000 product homepage`: https://developer.arm.com/Processors/Corstone-1000
 .. _`Arm FWU-A specification`: https://developer.arm.com/documentation/den0118
+.. _`Trusted Services organization`: https://github.com/Trusted-Services
 
-*Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.*
+
+*Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.*
 
 SPDX-License-Identifier: BSD-3-Clause

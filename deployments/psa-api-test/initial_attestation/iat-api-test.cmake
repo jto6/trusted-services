@@ -46,14 +46,14 @@ target_sources(${PROJECT_NAME} PRIVATE
 #
 #-------------------------------------------------------------------------------
 
-# Configuration for mbedcrypto
-set(MBEDTLS_USER_CONFIG_FILE
-	"${TS_ROOT}/components/service/crypto/client/cpp/config_mbedtls_user.h"
+# MbedTLS used for token verification
+set(MBEDTLS_USER_CONFIG_FILE "${TS_ROOT}/external/MbedTLS/config/crypto_posix.h"
 	CACHE STRING "Configuration file for mbedcrypto")
-
-# Mbed TLS provides libmbedcrypto
 include(${TS_ROOT}/external/MbedTLS/MbedTLS.cmake)
 target_link_libraries(${PROJECT_NAME} PRIVATE MbedTLS::mbedcrypto)
+
+# Use Mbed TLS to provide the psa crypto api interface files
+set(PSA_CRYPTO_API_INCLUDE ${MBEDTLS_PUBLIC_INCLUDE_PATH})
 
 #-------------------------------------------------------------------------------
 #  Advertise PSA API include paths to PSA Arch tests

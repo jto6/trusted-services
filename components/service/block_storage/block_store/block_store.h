@@ -113,6 +113,8 @@ struct block_store_interface
 	/**
 	 * \brief Read a block
 	 *
+	 * The function must not read following blocks even if the buffer_size suggests it.
+	 *
 	 * \param[in]  context         The concrete block_store context
 	 * \param[in]  client_id       The requesting client ID
 	 * \param[in]  handle          The handle corresponding to the open storage partition
@@ -139,6 +141,8 @@ struct block_store_interface
 
 	/**
 	 * \brief Write a block
+	 *
+	 * The function must not write following blocks even if the data_len suggests it.
 	 *
 	 * \param[in]  context         The concrete block_store context
 	 * \param[in]  client_id       The requesting client ID

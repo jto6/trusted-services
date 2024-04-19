@@ -24,6 +24,9 @@ add_components(TARGET "protected-storage"
 		"components/rpc/common/interface"
 		"components/rpc/ts_rpc/common"
 		"components/rpc/ts_rpc/endpoint/sp"
+		"components/rpc/ts_rpc/caller/sp"
+		"components/service/log/factory"
+		"components/service/log/client"
 )
 
 target_sources(protected-storage PRIVATE

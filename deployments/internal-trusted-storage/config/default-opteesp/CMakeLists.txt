@@ -5,6 +5,7 @@
 #
 #-------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+set(TS_PLATFORM "arm/fvp/fvp_base_revc-2xaemv8a" CACHE STRING "Target platform location.")
 include(../../../deployment.cmake REQUIRED)
 
 #-------------------------------------------------------------------------------
@@ -21,11 +22,18 @@ set(SP_BIN_UUID_CANON "dc1eef48-b17a-4ccf-ac8b-dfcff7711b14")
 set(SP_FFA_UUID_CANON "${TS_RPC_UUID_CANON}")
 
 set(SP_HEAP_SIZE "32 * 1024" CACHE STRING "SP heap size in bytes")
+set(SP_BOOT_ORDER "2" CACHE STRING "Boot order of the SP")
 set(TRACE_PREFIX "ITS" CACHE STRING "Trace prefix")
 
 target_include_directories(internal-trusted-storage PRIVATE
 	${CMAKE_CURRENT_LIST_DIR}
 )
+
+#-------------------------------------------------------------------------------
+#  Set target platform to provide drivers needed by the deployment
+#
+#-------------------------------------------------------------------------------
+add_platform(TARGET "internal-trusted-storage")
 
 #-------------------------------------------------------------------------------
 #  Add components - this deployment uses an infrastructure that provides
@@ -74,6 +82,7 @@ include(${TS_ROOT}/tools/cmake/common/ExportSp.cmake)
 export_sp(
 	SP_FFA_UUID_CANON ${SP_FFA_UUID_CANON}
 	SP_BIN_UUID_CANON ${SP_BIN_UUID_CANON}
+	SP_BOOT_ORDER ${SP_BOOT_ORDER}
 	SP_NAME "internal-trusted-storage"
 	MK_IN ${TS_ROOT}/environments/opteesp/sp.mk.in
 	DTS_IN ${CMAKE_CURRENT_LIST_DIR}/default_internal-trusted-storage.dts.in
