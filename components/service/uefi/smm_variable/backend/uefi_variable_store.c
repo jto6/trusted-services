@@ -27,7 +27,7 @@
 #include "service/crypto/client/psa/crypto_client.h"
 #endif
 
-static void load_variable_index(struct uefi_variable_store *context);
+static efi_status_t load_variable_index(struct uefi_variable_store *context);
 
 static efi_status_t sync_variable_index(const struct uefi_variable_store *context);
 
@@ -180,12 +180,17 @@ efi_status_t uefi_variable_store_init(struct uefi_variable_store *context, uint3
 		if (context->index_sync_buffer_size) {
 			context->index_sync_buffer = malloc(context->index_sync_buffer_size);
 			status = (context->index_sync_buffer) ? EFI_SUCCESS : EFI_OUT_OF_RESOURCES;
+		} else {
+			EMSG("Variable store must be capable of storing at least one variable");
+			return EFI_INVALID_PARAMETER;
 		}
 
 		/* Load the variable index with NV variable info from the persistent store */
 		if (context->index_sync_buffer) {
-			load_variable_index(context);
-			purge_orphan_index_entries(context);
+			status = load_variable_index(context);
+
+			if (status == EFI_SUCCESS)
+				purge_orphan_index_entries(context);
 		}
 	}
 
@@ -603,7 +608,7 @@ efi_status_t uefi_variable_store_get_var_check_property(
 	return status;
 }
 
-static void load_variable_index(struct uefi_variable_store *context)
+static efi_status_t load_variable_index(struct uefi_variable_store *context)
 {
 	struct storage_backend *persistent_store = context->persistent_store.storage_backend;
 
@@ -615,11 +620,23 @@ static void load_variable_index(struct uefi_variable_store *context)
 			SMM_VARIABLE_INDEX_STORAGE_UID, 0, context->index_sync_buffer_size,
 			context->index_sync_buffer, &data_len);
 
-		if (psa_status == PSA_SUCCESS) {
-			variable_index_restore(&context->variable_index, data_len,
-					       context->index_sync_buffer);
+		switch(psa_status) {
+			case PSA_SUCCESS:
+				(void) variable_index_restore(&context->variable_index, data_len,
+							      context->index_sync_buffer);
+				break;
+
+			case PSA_ERROR_DOES_NOT_EXIST:
+				IMSG("Index variable does not exist in NV store, continuing with empty index");
+				break;
+
+			default:
+				EMSG("Loading variable index failed: %d", psa_status);
+				return EFI_LOAD_ERROR;
 		}
 	}
+
+	return EFI_SUCCESS;
 }
 
 static efi_status_t sync_variable_index(const struct uefi_variable_store *context)
