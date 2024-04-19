@@ -23,14 +23,25 @@ Feature Highlights
 - Introduce the :ref:`Logging Service`.
 - Add crypto key store partitioning support to the Crypto Service. This feature allows isolating clients running in
   different SPs.
+- Add the "RSS Com" protocol. RSS Com is a new protocol used between secure partitions and security subsystems like the
+  Secure Enclave on Corstone-1000 or RSS on Kronos.
+
+
+Deprecations
+^^^^^^^^^^^^
+
+- This OpenAMP based psa_ipc implementation is deprecated and will be removed in the future.
+
 
 Updated external components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - MbedTLS version int the Crypto service is updated to v3.5.1.
+- NanoPB has been upgraded to v0.4.8.
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
+
 
 Resolved issues
 ^^^^^^^^^^^^^^^
