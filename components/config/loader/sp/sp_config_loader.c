@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 /*
- * Copyright (c) 2021-2022, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited and Contributors. All rights reserved.
  */
 
 #include <common/fdt/fdt_helpers.h>
@@ -34,10 +34,11 @@ static bool load_device_regions(const struct ffa_name_value_pair_v1_0 *value_pai
 	/* Iterate over the device regions */
 	while ((uintptr_t)d < (value_pair->value + value_pair->size)) {
 
-		struct device_region device_region;
+		struct device_region device_region = { 0 };
 
 		strncpy(device_region.dev_class, d->name,
-			sizeof(device_region.dev_class));
+			sizeof(device_region.dev_class) - 1);
+		device_region.dev_class[sizeof(device_region.dev_class) - 1] = '\0';
 		device_region.dev_instance = 0;
 		device_region.base_addr = d->location;
 		device_region.io_region_size = d->size;
@@ -63,10 +64,11 @@ static bool load_memory_regions(const struct ffa_name_value_pair_v1_0 *value_pai
 	/* Iterate over the device regions */
 	while ((uintptr_t)d < (value_pair->value + value_pair->size)) {
 
-		struct memory_region memory_region;
+		struct memory_region memory_region = { 0 };
 
 		strncpy(memory_region.region_name, d->name,
-			sizeof(memory_region.region_name));
+			sizeof(memory_region.region_name) - 1);
+		memory_region.region_name[sizeof(memory_region.region_name) - 1] = '\0';
 		memory_region.base_addr = d->location;
 		memory_region.region_size = d->size;
 
@@ -155,7 +157,8 @@ static bool load_fdt(const void *fdt, size_t fdt_size)
 			}
 
 			strncpy(memory_region.region_name, subnode_name,
-				sizeof(memory_region.region_name));
+				sizeof(memory_region.region_name) - 1);
+			memory_region.region_name[sizeof(memory_region.region_name) - 1] = '\0';
 			memory_region.base_addr = (uintptr_t)base_addr;
 			memory_region.region_size = page_cnt * FFA_SP_MANIFEST_PAGE_SIZE;
 
@@ -193,7 +196,8 @@ static bool load_fdt(const void *fdt, size_t fdt_size)
 			}
 
 			strncpy(device_region.dev_class, subnode_name,
-				sizeof(device_region.dev_class));
+				sizeof(device_region.dev_class) - 1);
+			device_region.dev_class[sizeof(device_region.dev_class) - 1] = '\0';
 			device_region.base_addr = base_addr;
 			device_region.io_region_size = page_cnt * FFA_SP_MANIFEST_PAGE_SIZE;
 			device_region.dev_instance = 0;
