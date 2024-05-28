@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 /*
- * Portions copyright (c) 2018-2019, Arm Limited and Contributors.
+ * Portions copyright (c) 2018-2024, Arm Limited and Contributors.
  * All rights reserved.
  */
 
@@ -90,21 +90,21 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
-typedef signed char int8_least_t;
-typedef short int16_least_t;
-typedef int int32_least_t;
+typedef signed char int_least8_t;
+typedef short int_least16_t;
+typedef int int_least32_t;
 
-typedef unsigned char uint8_least_t;
-typedef unsigned short uint16_least_t;
-typedef unsigned int uint32_least_t;
+typedef unsigned char uint_least8_t;
+typedef unsigned short uint_least16_t;
+typedef unsigned int uint_least32_t;
 
-typedef int int8_fast_t;
-typedef int int16_fast_t;
-typedef int int32_fast_t;
+typedef int int_fast8_t;
+typedef int int_fast16_t;
+typedef int int_fast32_t;
 
-typedef unsigned int uint8_fast_t;
-typedef unsigned int uint16_fast_t;
-typedef unsigned int uint32_fast_t;
+typedef unsigned int uint_fast8_t;
+typedef unsigned int uint_fast16_t;
+typedef unsigned int uint_fast32_t;
 
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
