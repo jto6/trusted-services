@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 /*
- * Portions copyright (c) 2018-2019, Arm Limited and Contributors.
+ * Portions copyright (c) 2018-2024, Arm Limited and Contributors.
  * All rights reserved.
  */
 
@@ -29,4 +29,14 @@ long strtol(const char *nptr, char **endptr, int base);
 unsigned long strtoul(const char *nptr, char **endptr, int base);
 long long strtoll(const char *nptr, char **endptr, int base);
 unsigned long long strtoull(const char *nptr, char **endptr, int base);
+
+/*
+ * The declaration of these functions is part of libc but they are implemented
+ * in the allocator.
+ */
+void *malloc(size_t size);
+void free(void *ptr);
+void *calloc(size_t nmemb, size_t size);
+void *realloc(void *ptr, size_t size);
+
 #endif /* STDLIB_H */
