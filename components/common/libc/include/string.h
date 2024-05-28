@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 /*
- * Portions copyright (c) 2018-2020, Arm Limited and Contributors.
+ * Portions copyright (c) 2018-2024, Arm Limited and Contributors.
  * Portions copyright (c) 2023, Intel Corporation. All rights reserved.
  * All rights reserved.
  */
@@ -30,5 +30,6 @@ char *strrchr(const char *p, int ch);
 size_t strlcpy(char * dst, const char * src, size_t dsize);
 size_t strlcat(char * dst, const char * src, size_t dsize);
 char *strtok_r(char *s, const char *delim, char **last);
+char *strstr(const char *haystack, const char *needle);
 
 #endif /* STRING_H */
