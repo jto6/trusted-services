@@ -104,10 +104,6 @@ data:
       os_id : "GNU/Linux"
       params:
             - "-GUnix Makefiles"
-    - name: "newlib-opteesp"
-      src: "$TS_ROOT/deployments/newlib/opteesp"
-      params:
-            - "-GUnix Makefiles"
     - name: "platform-inspect-arm-linux"
       src: "$TS_ROOT/deployments/platform-inspect/arm-linux"
       os_id : "GNU/Linux"
