@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2018-2024, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -28,10 +28,6 @@
 
 #define __printflike(fmtarg, firstvararg) \
 		__attribute__((__format__ (__printf__, fmtarg, firstvararg)))
-
-#define __weak_reference(sym, alias)	\
-	__asm__(".weak alias");		\
-	__asm__(".equ alias, sym")
 
 #define __STRING(x)	#x
 #define __XSTRING(x)	__STRING(x)
