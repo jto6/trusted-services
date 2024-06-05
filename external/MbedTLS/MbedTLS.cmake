@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2023, Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2020-2024, Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -7,7 +7,7 @@
 
 set(MBEDTLS_URL "https://github.com/Mbed-TLS/mbedtls.git"
 		CACHE STRING "Mbed TLS repository URL")
-set(MBEDTLS_REFSPEC "mbedtls-3.5.1"
+set(MBEDTLS_REFSPEC "mbedtls-3.6.0"
 		CACHE STRING "Mbed TLS git refspec")
 set(MBEDTLS_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/mbedtls-src"
 		CACHE PATH "MbedTLS source directory")
