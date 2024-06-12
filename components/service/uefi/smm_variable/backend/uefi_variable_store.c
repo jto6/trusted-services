@@ -1357,7 +1357,7 @@ static efi_status_t authenticate_secure_boot_variable(const struct uefi_variable
 
 	for (int i = 0; i < ARRAY_SIZE(allowed_key_store_variables); i++) {
 		size_t actual_variable_length = 0; /* Unused */
-		efi_data_map allowed_key_store_var_map;
+		efi_data_map allowed_key_store_var_map = { 0 };
 
 		if (!allowed_key_store_variables[i])
 			continue;
