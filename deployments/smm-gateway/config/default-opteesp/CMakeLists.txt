@@ -106,7 +106,6 @@ endif()
 #TODO: api headers
 
 install(TARGETS smm-gateway
-			PUBLIC_HEADER DESTINATION ${TS_ENV}/include
 			RUNTIME DESTINATION ${TS_ENV}/bin
 		)
 
