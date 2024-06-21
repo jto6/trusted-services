@@ -97,10 +97,10 @@ SECTIONS {
 		__bss_end = .;
 	}
 	.stack : {
-		. = ALIGN(4);
+		. = ALIGN(16);
 		__stack_start = .;
 		. += SP_STACK_SIZE;
-		. = ALIGN(4);
+		. = ALIGN(16);
 		__stack_end = .;
 	}
 
