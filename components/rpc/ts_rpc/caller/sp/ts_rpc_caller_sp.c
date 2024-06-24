@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Arm Limited and Contributors. All rights reserved.
+ * Copyright (c) 2023-2024, Arm Limited and Contributors. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -482,7 +482,7 @@ rpc_status_t ts_rpc_caller_sp_init(struct rpc_caller_interface *rpc_caller)
 	if (result != SP_RESULT_OK)
 		return RPC_ERROR_TRANSPORT_LAYER;
 
-	if (major != FFA_VERSION_MAJOR || minor != FFA_VERSION_MINOR)
+	if (major != FFA_VERSION_MAJOR || minor < FFA_VERSION_MINOR)
 		return RPC_ERROR_TRANSPORT_LAYER;
 
 	if (sp_discovery_own_id_get(&own_id) != SP_RESULT_OK)
