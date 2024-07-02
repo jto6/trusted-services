@@ -412,6 +412,28 @@ ffa_result ffa_console_log_64(const char *message, size_t length);
  */
 void ffa_interrupt_handler(uint32_t interrupt_id);
 
+/**
+ * @brief      VM created message handler prototype. Must be implemented by
+ *             another component.
+ *
+ * @param[in]  vm_id  ID of VM that has been created
+ * @param[in]  handle Globally unique Handle to identify a memory region that
+ *                    contains information associated with the created VM
+ * @return            The FF-A error status code
+ */
+ffa_result ffa_vm_created_handler(uint16_t vm_id, uint64_t handle);
+
+/**
+ * @brief      VM destroyed message handler prototype. Must be implemented by
+ *             another component.
+ *
+ * @param[in]  vm_id  ID of VM that has been destroyed
+ * @param[in]  handle Globally unique Handle to identify a memory region that
+ *                    contains information associated with the destroyed VM
+ * @return            The FF-A error status code
+ */
+ffa_result ffa_vm_destroyed_handler(uint16_t vm_id, uint64_t handle);
+
 #ifdef __cplusplus
 }
 #endif

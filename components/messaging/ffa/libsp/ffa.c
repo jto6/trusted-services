@@ -238,6 +238,41 @@ ffa_result ffa_id_get(uint16_t *id)
 	return FFA_OK;
 }
 
+static void handle_framework_msg(struct ffa_params *result)
+{
+	if (result->a0 == FFA_INTERRUPT) {
+		ffa_interrupt_handler(result->a2);
+		ffa_return_from_interrupt(result);
+	} else if (result->a0 == FFA_MSG_SEND_DIRECT_REQ_32 && FFA_IS_FRAMEWORK_MSG(result->a2)) {
+		ffa_result res = FFA_OK;
+		uint16_t src_id = result->a1 >> 16;
+		uint16_t dst_id = result->a1;
+		uint64_t handle = reg_pair_to_64(result->a4, result->a3);
+		uint16_t vm_id = result->a5;
+
+		switch (result->a2 & FFA_FRAMEWORK_MSG_TYPE_MASK) {
+		case FFA_FRAMEWORK_MSG_VM_CREATED:
+			res = ffa_vm_created_handler(vm_id, handle);
+			ffa_svc(FFA_MSG_SEND_DIRECT_RESP_32, ((uint32_t)dst_id << 16) | src_id,
+				FFA_MSG_FLAG_FRAMEWORK | FFA_FRAMEWORK_MSG_VM_CREATED_ACK,
+				(uint64_t)res, FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ,
+				FFA_PARAM_MBZ, result);
+			break;
+		case FFA_FRAMEWORK_MSG_VM_DESTROYED:
+			res = ffa_vm_destroyed_handler(vm_id, handle);
+			ffa_svc(FFA_MSG_SEND_DIRECT_RESP_32, ((uint32_t)dst_id << 16) | src_id,
+				FFA_MSG_FLAG_FRAMEWORK | FFA_FRAMEWORK_MSG_VM_DESTROYED_ACK,
+				(uint64_t)res, FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ,
+				FFA_PARAM_MBZ, result);
+			break;
+		default:
+			ffa_svc(FFA_ERROR, FFA_PARAM_MBZ, FFA_INVALID_PARAMETERS, FFA_PARAM_MBZ,
+				FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ, result);
+			break;
+		}
+	}
+}
+
 ffa_result ffa_msg_wait(struct ffa_direct_msg *msg)
 {
 	struct ffa_params result = {0};
@@ -246,9 +281,10 @@ ffa_result ffa_msg_wait(struct ffa_direct_msg *msg)
 		FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ,
 		&result);
 
-	while (result.a0 == FFA_INTERRUPT) {
-		ffa_interrupt_handler(result.a2);
-		ffa_return_from_interrupt(&result);
+	/* FF-A framework messages are handled outside of the main partition message handler loop */
+	while ((result.a0 == FFA_INTERRUPT) ||
+		(result.a0 == FFA_MSG_SEND_DIRECT_REQ_32 && FFA_IS_FRAMEWORK_MSG(result.a2))) {
+		handle_framework_msg(&result);
 	}
 
 	if (result.a0 == FFA_ERROR) {
@@ -325,9 +361,10 @@ static ffa_result ffa_msg_send_direct_resp(uint32_t function_id,
 		SHIFT_U32(source, FFA_MSG_SEND_DIRECT_RESP_SOURCE_ID_SHIFT) |
 		dest, FFA_PARAM_MBZ, a0, a1, a2, a3, a4, &result);
 
-	while (result.a0 == FFA_INTERRUPT) {
-		ffa_interrupt_handler(result.a2);
-		ffa_return_from_interrupt(&result);
+	/* FF-A framework messages are handled outside of the main partition message handler loop */
+	while ((result.a0 == FFA_INTERRUPT) ||
+		(result.a0 == FFA_MSG_SEND_DIRECT_REQ_32 && FFA_IS_FRAMEWORK_MSG(result.a2))) {
+		handle_framework_msg(&result);
 	}
 
 	if (result.a0 == FFA_ERROR) {
