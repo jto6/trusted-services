@@ -314,7 +314,7 @@ static void test_communication(struct ffa_direct_msg *msg)
 	}
 
 	/* Non-null flags (W2) register */
-	ffa_svc(FFA_MSG_SEND_DIRECT_REQ_64, (uint32_t)(src << 16 | 0x1000), 1, 0, 0, 0, 0, 0,
+	ffa_svc(FFA_MSG_SEND_DIRECT_REQ_64, (uint32_t)(src << 16 | dst), 1, 0, 0, 0, 0, 0,
 		&raw_params);
 	if (raw_params.a0 != FFA_ERROR || (uint32_t)raw_params.a2 != FFA_INVALID_PARAMETERS) {
 		EMSG("Unexpected error code: %d != %ld", FFA_INVALID_PARAMETERS, raw_params.a2);
