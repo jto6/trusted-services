@@ -77,3 +77,5 @@ endif()
 
 # Default protocol UUID used by TS SPs.
 set(TS_RPC_UUID_CANON "bdcd76d7-825e-4751-963b-86d4f84943ac" CACHE STRING "Trusted Services PRC (protocol) UUID.")
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

@@ -15,6 +15,8 @@ if (NOT DEFINED CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "MinSizWithDebInfo" CACHE STRING "Build type.")
 endif()
 
+#set(TRACE_LEVEL "TRACE_LEVEL_DEBUG" CACHE STRING "Trace level" FORCE)
+
 include(../../../deployment.cmake REQUIRED)
 
 #-------------------------------------------------------------------------------
