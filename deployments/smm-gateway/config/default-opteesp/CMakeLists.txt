@@ -59,7 +59,7 @@ target_compile_definitions("smm-gateway" PRIVATE
 set(TRACE_PREFIX "SMMGW" CACHE STRING "Trace prefix")
 
 # Setting the MM communication buffer parameters
-set(MM_COMM_BUFFER_ADDRESS "0x00000008 0x81000000" CACHE STRING "Address of MM communicte buffer in 64 bit DTS format")
+set(MM_COMM_BUFFER_ADDRESS "0x00000000 0x81000000" CACHE STRING "Address of MM communicte buffer in 64 bit DTS format")
 set(MM_COMM_BUFFER_PAGE_COUNT "8" CACHE STRING "Size of the MM communicate buffer in 4k pages")
 
 target_include_directories(smm-gateway PRIVATE
